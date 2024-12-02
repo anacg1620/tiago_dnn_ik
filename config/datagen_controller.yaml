@@ -1,0 +1,7 @@
+datagen_controller:
+  type: "tiago_data_generation/DatagenControllerPlugin"
+  arm_joint_names: ["arm_1_joint", "arm_2_joint", "arm_3_joint", "arm_4_joint", "arm_5_joint", "arm_6_joint", "arm_7_joint"]
+  start_link: "torso_lift_link"
+  end_link: "gripper_grasping_frame"
+  num_pos: 1000
+  filename: "datagen_1000_columns.csv"
