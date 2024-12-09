@@ -106,6 +106,7 @@ bool DatagenController::init(hardware_interface::PositionJointInterface* hw, ros
         return 1;
     }
     file << "arm_1,arm_2,arm_3,arm_4,arm_5,arm_6,arm_7,ee_x,ee_y,ee_z\n";
+    begin = ros::Time::now();
 
     return true;
 }
@@ -141,7 +142,8 @@ void DatagenController::update(const ros::Time& time, const ros::Duration& perio
         data.push_back(H_root_ee.p[2]);
 
         // workspace size filters
-        if (H_root_ee.p[2] < 0.2)
+        // TODO: root is torso lift link, so the floor is not at 0 but lower
+        if (H_root_ee.p[2] < 0.0)
         {
             ROS_WARN("Too close to the floor!");
         }
@@ -176,6 +178,8 @@ void DatagenController::update(const ros::Time& time, const ros::Duration& perio
         {
             file.close();
             std::cout << "CSV file " << filename << " created successfully." << std::endl;
+            ros::Duration duration = ros::Time::now() - begin;
+            ROS_INFO("Generation time: %lf secs", duration.toSec());
         }
     }
 }

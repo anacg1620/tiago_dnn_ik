@@ -50,6 +50,8 @@ private:
   std::vector<std::uniform_real_distribution<float>> distrs;
   std::string filename;
   std::ofstream file;
+
+  ros::Time begin;
 };
 
 } //namespace
