@@ -1,0 +1,4 @@
+x_train_file: "x_train.npy"
+y_train_file: "y_train.npy"
+x_test_file: "x_test.npy"
+y_test_file: "y_test.npy"
