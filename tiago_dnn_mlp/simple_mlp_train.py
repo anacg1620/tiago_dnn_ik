@@ -30,9 +30,9 @@ model = tf.keras.models.Sequential([
 
 # Specify the loss fuction, optimizer, metrics
 model.compile(
-    loss = tf.keras.losses.CategoricalCrossentropy(),
-    optimizer = tf.keras.optimizers.SGD(),
-    metrics = [tf.keras.metrics.SparseCategoricalAccuracy()]
+    loss = 'mean_squared_error',
+    optimizer = 'sgd',
+    metrics = ['mean_absolute_error']
 )
 
 model.summary()
@@ -43,4 +43,10 @@ history = model.fit(
     verbose=0
 )
 
+# Test
 loss, acc = model.evaluate(x_test, y_test)
+
+# Predict
+x_pred = x_test[:1]
+y_pred = model.predict(x_pred, batch_size=None, verbose="auto", steps=None, callbacks=None)
+print(f'Input {x_pred}, predicted output {y_pred}')

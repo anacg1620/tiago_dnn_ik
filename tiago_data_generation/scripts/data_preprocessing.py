@@ -11,8 +11,8 @@ with open(os.path.join('/tiago_public_ws/src/tiago_data_generation/', 'config/da
 
 df = pd.read_csv(os.path.join('/home/anacg/.ros', config['datagen_controller']['filename']))
 
-x_cols = ['arm_1', 'arm_2', 'arm_3', 'arm_4', 'arm_5', 'arm_6', 'arm_7']
-y_cols = ['ee_x', 'ee_y', 'ee_z']
+x_cols = ['ee_x', 'ee_y', 'ee_z']
+y_cols = ['arm_1', 'arm_2', 'arm_3', 'arm_4', 'arm_5', 'arm_6', 'arm_7']
 
 # Standardization
 # df = (df - df.mean()) / df.std()
