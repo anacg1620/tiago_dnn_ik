@@ -18,3 +18,7 @@ Then, run the image from the `tiago_dnn_ik` folder and upload the neccessary fil
 docker run -it --network=host --rm --volume ${PWD}:/home/tiago_dnn_ik --gpus all --name tensorflow_container tensorflow/tensorflow:latest-gpu /bin/bash
 ```
 Move to the desired DNN model folder and run the training with python. Parameters can be modified by changing the corresponding yaml.
+You may need to install the python yaml module:
+```bash
+pip install pyyaml
+```

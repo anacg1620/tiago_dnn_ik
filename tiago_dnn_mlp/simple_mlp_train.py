@@ -39,12 +39,31 @@ model.summary()
 
 # Train the model
 history = model.fit(
-    x=x_train, y=y_train, epochs=10,
-    verbose=0
+    x=x_train,
+    y=y_train,
+    batch_size=config['batch_size'],
+    epochs=config['epochs'],
+    verbose=config['verbose'],
+    callbacks=None,
+    validation_split=config['validation_split'],
+    validation_data=None,
+    shuffle=config['shuffle'],
+    class_weight=None,
+    sample_weight=None,
+    initial_epoch=config['initial_epoch'],
+    steps_per_epoch=None,
+    validation_steps=None,
+    validation_batch_size=None,
+    validation_freq=config['validation_freq'],
 )
 
 # Test
 loss, acc = model.evaluate(x_test, y_test)
+
+# Save model
+if config['save']:
+    model.save('simple_mlp.keras')
+    print('Trained model saved to .keras file')
 
 # Predict
 x_pred = x_test[:1]
