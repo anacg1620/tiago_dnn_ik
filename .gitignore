@@ -41,3 +41,6 @@
 
 # trained models
 *.keras
+
+# logs
+**/logs

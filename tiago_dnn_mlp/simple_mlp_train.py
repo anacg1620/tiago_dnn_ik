@@ -3,6 +3,7 @@
 import yaml
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
@@ -32,19 +33,26 @@ model = tf.keras.models.Sequential([
 model.compile(
     loss = 'mean_squared_error',
     optimizer = 'sgd',
-    metrics = ['mean_absolute_error']
+    metrics = ['mean_squared_error']
 )
 
 model.summary()
+keras.utils.plot_model(model, 'simple_mlp_model.png', show_shapes=True)
 
 # Train the model
+callbacks_list = [
+    keras.callbacks.TensorBoard (
+        log_dir="logs/simple_mlp"      
+    )
+]
+
 history = model.fit(
     x=x_train,
     y=y_train,
     batch_size=config['batch_size'],
     epochs=config['epochs'],
     verbose=config['verbose'],
-    callbacks=None,
+    callbacks=callbacks_list,
     validation_split=config['validation_split'],
     validation_data=None,
     shuffle=config['shuffle'],
