@@ -4,6 +4,9 @@
 import yaml
 import numpy as np
 import tensorflow as tf
+import wandb
+
+wandb.init(project='tiago_ik', name='cnn', tensorboard=True)
 
 with open('cnn_config.yaml') as f:
     config = yaml.safe_load(f)

@@ -4,6 +4,9 @@ import yaml
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
+import wandb
+
+wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True)
 
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)

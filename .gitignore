@@ -38,9 +38,11 @@
 
 # data
 /data
+*.png
 
 # trained models
 *.keras
 
 # logs
 **/logs
+**/wandb

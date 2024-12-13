@@ -22,5 +22,6 @@ You may need to install some additional python modules:
 ```bash
 pip install pyyaml
 pip install pydot
+pip install wandb
 apt update && apt install graphviz
 ```
