@@ -6,10 +6,10 @@ import tensorflow as tf
 from tensorflow import keras
 import wandb
 
-wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True)
-
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
+
+wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True, config=config['simple_mlp'])
 
 x_train = np.load(f"../data/{config['x_train_file']}")
 y_train = np.load(f"../data/{config['y_train_file']}")
@@ -27,15 +27,14 @@ output_size = y_train.shape[1]
 # Specify the model's architecture
 model = tf.keras.models.Sequential([
     tf.keras.layers.Flatten(input_shape = [input_size]),
-    tf.keras.layers.Dense(300, activation='relu'),
-    tf.keras.layers.Dense(100, activation='relu'),
+    tf.keras.layers.Dense(config['simple_mlp']['units'], activation='relu'),
     tf.keras.layers.Dense(output_size, activation='softmax'),
 ])
 
 # Specify the loss fuction, optimizer, metrics
 model.compile(
     loss = 'mean_squared_error',
-    optimizer = 'sgd',
+    optimizer = tf.keras.optimizers.Adam(learning_rate=config['simple_mlp']['lr']),
     metrics = ['mean_squared_error']
 )
 
@@ -46,33 +45,37 @@ keras.utils.plot_model(model, 'simple_mlp_model.png', show_shapes=True)
 callbacks_list = [
     keras.callbacks.TensorBoard (
         log_dir="logs/simple_mlp"      
+    ),
+    keras.callbacks.EarlyStopping (
+            monitor='val_loss',
+            patience=4,
     )
 ]
 
 history = model.fit(
     x=x_train,
     y=y_train,
-    batch_size=config['batch_size'],
-    epochs=config['epochs'],
-    verbose=config['verbose'],
+    batch_size=config['simple_mlp']['batch_size'],
+    epochs=config['simple_mlp']['epochs'],
+    verbose=config['simple_mlp']['verbose'],
     callbacks=callbacks_list,
-    validation_split=config['validation_split'],
+    validation_split=config['simple_mlp']['validation_split'],
     validation_data=None,
-    shuffle=config['shuffle'],
+    shuffle=config['simple_mlp']['shuffle'],
     class_weight=None,
     sample_weight=None,
-    initial_epoch=config['initial_epoch'],
+    initial_epoch=config['simple_mlp']['initial_epoch'],
     steps_per_epoch=None,
     validation_steps=None,
     validation_batch_size=None,
-    validation_freq=config['validation_freq'],
+    validation_freq=config['simple_mlp']['validation_freq'],
 )
 
 # Test
 loss, acc = model.evaluate(x_test, y_test)
 
 # Save model
-if config['save']:
+if config['simple_mlp']['save']:
     model.save('simple_mlp.keras')
     print('Trained model saved to .keras file')
 

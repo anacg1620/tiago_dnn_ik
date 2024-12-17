@@ -8,10 +8,10 @@ from tensorflow import keras
 from keras import layers
 import wandb
 
-wandb.init(project='tiago_ik', name='mlp', tensorboard=True)
-
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
+
+wandb.init(project='tiago_ik', name='seven_subnet_mlp', tensorboard=True, config=config['seven_subnet_mlp'])
 
 x_train = np.load(f"../data/{config['x_train_file']}")
 y_train = np.load(f"../data/{config['y_train_file']}")
@@ -29,46 +29,49 @@ inputZ = keras.Input(shape=(1,), name="Zcoor")
 
 # subnet 1:
 base_input = layers.concatenate([inputX, inputY, inputZ], name="base_input")
-base_layer = layers.Dense(16, activation="sigmoid", name="base_layer")(base_input)
-output1 = layers.Dense(1, activation = "linear", name="q1")(base_layer)
+layer1 = layers.Dense(config['seven_subnet_mlp']['units1'], activation="sigmoid", name="layer1")(base_input)
+output1 = layers.Dense(1, activation = "linear", name="q1")(layer1)
 
 # subnet 2:
 input2 = layers.concatenate([inputX, inputY, inputZ], name="input2")
-shoulder_layer = layers.Dense(272, activation="relu", name="shoulder_layer") (input2)
-output2 = layers.Dense(1, activation = "linear", name="q2")(shoulder_layer)
+layer2 = layers.Dense(config['seven_subnet_mlp']['units2'], activation="relu", name="layer2") (input2)
+output2 = layers.Dense(1, activation = "linear", name="q2")(layer2)
 
 # subnet 3:
 input3 = layers.concatenate([inputX, inputY, inputZ, output2], name="input3")    
-elbow_layer = layers.Dense(496, activation="relu", name="elbow_layer") (input3)
-output3 = layers.Dense(1, activation = "linear", name="q3")(elbow_layer)
+layer3 = layers.Dense(config['seven_subnet_mlp']['units3'], activation="relu", name="layer3") (input3)
+output3 = layers.Dense(1, activation = "linear", name="q3")(layer3)
 
 # subnet 4:
 input4 = layers.concatenate([inputX, inputY, inputZ, output3], name="input4")
-pitch_layer = layers.Dense(496, activation="relu", name="pitch_layer") (input4)
-output4 = layers.Dense(1, activation = "linear", name="q4")(pitch_layer)
+layer4 = layers.Dense(config['seven_subnet_mlp']['units4'], activation="relu", name="layer4") (input4)
+output4 = layers.Dense(1, activation = "linear", name="q4")(layer4)
 
 # subnet 5:
 input5 = layers.concatenate([inputX, inputY, inputZ, output4], name="input5")
-shoulder_layer = layers.Dense(272, activation="relu", name="shoulder_layer") (input5)
-output5 = layers.Dense(1, activation = "linear", name="q2")(shoulder_layer)
+layer5 = layers.Dense(config['seven_subnet_mlp']['units5'], activation="relu", name="layer5") (input5)
+output5 = layers.Dense(1, activation = "linear", name="q5")(layer5)
 
 # subnet 6:
 input6 = layers.concatenate([inputX, inputY, inputZ, output5], name="input6")    
-elbow_layer = layers.Dense(496, activation="relu", name="elbow_layer") (input6)
-output6 = layers.Dense(1, activation = "linear", name="q3")(elbow_layer)
+layer6 = layers.Dense(config['seven_subnet_mlp']['units6'], activation="relu", name="layer6") (input6)
+output6 = layers.Dense(1, activation = "linear", name="q6")(layer6)
 
 # subnet 7:
 input7 = layers.concatenate([inputX, inputY, inputZ, output6], name="input7")
-pitch_layer = layers.Dense(496, activation="relu", name="pitch_layer") (input7)
-output7 = layers.Dense(1, activation = "linear", name="q4")(pitch_layer)
+layer7 = layers.Dense(config['seven_subnet_mlp']['units7'], activation="relu", name="layer7") (input7)
+output7 = layers.Dense(1, activation = "linear", name="q7")(layer7)
 
 model = keras.Model(inputs=[inputX, inputY, inputZ], outputs=[output1, output2, output3, output4, output5, output6, output7], name="ConcatMLP")
 
 model.summary()
 keras.utils.plot_model(model, 'concat_mlp_model.png', show_shapes=True)
 
-optimizer = tf.keras.optimizers.Adam(0.01)
-model.compile(optimizer=optimizer, loss=keras.losses.mean_squared_error, metrics=['mse'])
+model.compile(
+    optimizer = keras.optimizers.Adam(learning_rate=config['seven_subnet_mlp']['lr']), 
+    loss = 'mean_squared_error',
+    metrics = ['mse']
+)
 
 x = x_train[:,[0]]
 y = x_train[:,[1]]
@@ -104,16 +107,18 @@ callbacks_list = [
         patience=3
     ),
     keras.callbacks.TensorBoard (
-        log_dir="logs/concat_mlp"     
+        log_dir="logs/seven_subnet_mlp"     
     )
 ]
 
 model.fit({'Xcoor':x, 'Ycoor':y, 'Zcoor':z}, {'q1': q1_, 'q2':q2_, 'q3':q3_, 'q4':q4_, 'q5':q5_, 'q6':q6_, 'q7':q7_}, 
-           epochs=config['epochs'], 
+           batch_size=config['seven_subnet_mlp']['batch_size'],
+           epochs=config['seven_subnet_mlp']['epochs'],
+           verbose=config['seven_subnet_mlp']['verbose'],
            callbacks=callbacks_list, 
            validation_data=([x_t, y_t, z_t], [q1_t, q2_t, q3_t, q4_t, q5_t, q6_t, q7_t]) )
 
 # Save model
-if config['save']:
-    model.save('simple_mlp.keras')
+if config['seven_subnet_mlp']['save']:
+    model.save('7subnet_mlp.keras')
     print('Trained model saved to .keras file')

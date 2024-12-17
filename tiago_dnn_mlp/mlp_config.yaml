@@ -1,12 +1,24 @@
-x_train_file: "x_train.npy"
-y_train_file: "y_train.npy"
-x_test_file: "x_test.npy"
-y_test_file: "y_test.npy"
-save: True
-batch_size: 32
-epochs: 100
-verbose: 0
-validation_split: 0.0
-shuffle: True
-initial_epoch: 0
-validation_freq: 1
+x_train_file: "x_train_mil.npy"
+y_train_file: "y_train_mil.npy"
+x_test_file: "x_test_mil.npy"
+y_test_file: "y_test_mil.npy"
+simple_mlp:
+  save: True
+  units: 512
+  batch_size: 32
+  lr: 0.01
+  epochs: 5
+  verbose: 1
+seven_subnet_mlp:
+  save: True
+  units1: 16
+  units2: 272
+  units3: 496
+  units4: 496
+  units5: 272
+  units6: 496
+  units7: 496
+  batch_size: 32
+  lr: 0.01
+  epochs: 5
+  verbose: 0
