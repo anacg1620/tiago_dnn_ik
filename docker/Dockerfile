@@ -8,9 +8,6 @@ RUN apt-get update \
 
 # python dependencies
 RUN pip install -q -U \
-pyyaml pydot wandb 
-
-# copy repo to docker
-COPY . /home/tiago_dnn_ik
+pyyaml pydot wandb keras-tuner
 
 ENV NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=all
