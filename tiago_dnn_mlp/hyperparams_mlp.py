@@ -101,9 +101,9 @@ class SevenSubnetMlpModel(kt.HyperModel):
 
         return model
     
-    def fit(self, hp, model, dic1, dic2, **kwargs):
+    def fit(self, hp, model, *args, **kwargs):
         return model.fit(
-            dic1, dic2,
+            *args,
             batch_size=hp.Choice("batch_size", [16, 32]),
             **kwargs,
         )
@@ -174,8 +174,8 @@ if __name__ == '__main__':
                             factor=3,
                             directory='mlp_tuning',
                             project_name='seven_subnet_mlp')
-        tuner.search(x_train, y_train, epochs=50, validation_split=0.2, callbacks=[stop_early], 
-                     dic1={'Xcoor':x, 'Ycoor':y, 'Zcoor':z}, dic2={'q1': q1_, 'q2':q2_, 'q3':q3_, 'q4':q4_, 'q5':q5_, 'q6':q6_, 'q7':q7_})
+        tuner.search({'Xcoor':x, 'Ycoor':y, 'Zcoor':z}, {'q1': q1_, 'q2':q2_, 'q3':q3_, 'q4':q4_, 'q5':q5_, 'q6':q6_, 'q7':q7_}, 
+                     epochs=50, validation_split=0.2, callbacks=[stop_early])
 
     else:
         print('Not an accepted option. Choose MLP architecture: 0 for simple and 1 for seven_subnet')
