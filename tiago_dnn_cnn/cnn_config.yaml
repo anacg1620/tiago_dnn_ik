@@ -10,4 +10,11 @@ validation_split: 0.0
 shuffle: True
 initial_epoch: 0
 validation_freq: 1
-learning_rate: 0.1
+lr: 0.1
+filters1: 1000
+filters2: 800
+units1: 800
+units2: 600
+units3: 400
+units4: 200
+units5: 100

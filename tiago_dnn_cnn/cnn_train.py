@@ -26,23 +26,23 @@ output_size = y_train.shape[1]
 
 # Specify the model's architecture
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv1D(filters=1000, kernel_size=1, input_shape=(input_size, 1)),
-    tf.keras.layers.Conv1D(filters=800, kernel_size=3, activation='elu'),
+    tf.keras.layers.Conv1D(filters=config['filters1'], kernel_size=1, input_shape=(input_size, 1)),
+    tf.keras.layers.Conv1D(filters=config['filters2'], kernel_size=3, activation='elu'),
     # tf.keras.layers.MaxPooling1D(pool_size=3), # MaxPooling1D downsizes the model by 2, but the output of the previous one without orient is size 1
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dropout(0.5),
-    tf.keras.layers.Dense(800, activation='elu'),
-    tf.keras.layers.Dense(600, activation='elu'),
-    tf.keras.layers.Dense(400, activation='elu'),
-    tf.keras.layers.Dense(200, activation='elu'),
-    tf.keras.layers.Dense(100, activation='elu'),
+    tf.keras.layers.Dense(config['units1'], activation='elu'),
+    tf.keras.layers.Dense(config['units2'], activation='elu'),
+    tf.keras.layers.Dense(config['units3'], activation='elu'),
+    tf.keras.layers.Dense(config['units4'], activation='elu'),
+    tf.keras.layers.Dense(config['units5'], activation='elu'),
     tf.keras.layers.Dense(output_size, activation='elu'),
 ])
 
 # Specify the loss fuction, optimizer, metrics
 model.compile(
     loss = 'mean_squared_error',
-    optimizer = tf.keras.optimizers.Adam(learning_rate=config['learning_rate']),
+    optimizer = tf.keras.optimizers.Adam(learning_rate=config['lr']),
     metrics = ['mean_squared_error']
 )
 
@@ -51,9 +51,8 @@ tf.keras.utils.plot_model(model, 'cnn_model.png', show_shapes=True)
 
 # Train the model
 callbacks_list = [
-    tf.keras.callbacks.TensorBoard (
-        log_dir="logs/cnn"      
-    )
+    tf.keras.callbacks.TensorBoard(log_dir="logs/cnn"),
+    tf.keras.callbacks.EarlyStopping(patience=3)
 ]
 
 history = model.fit(
@@ -64,7 +63,7 @@ history = model.fit(
     verbose=config['verbose'],
     callbacks=callbacks_list,
     validation_split=config['validation_split'],
-    validation_data=None,
+    validation_data=[x_test, y_test],
     shuffle=config['shuffle'],
     class_weight=None,
     sample_weight=None,
@@ -75,12 +74,9 @@ history = model.fit(
     validation_freq=config['validation_freq'],
 )
 
-# Test
-loss, acc = model.evaluate(x_test, y_test)
-
 # Save model
 if config['save']:
-    model.save('simple_mlp.keras')
+    model.save('cnn.keras')
     print('Trained model saved to .keras file')
 
 # Predict
