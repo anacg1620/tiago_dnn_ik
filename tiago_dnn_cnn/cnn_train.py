@@ -26,9 +26,9 @@ output_size = y_train.shape[1]
 
 # Specify the model's architecture
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Conv1D(filters=1000, kernel_size=1, activation='elu'),
+    tf.keras.layers.Conv1D(filters=1000, kernel_size=1, input_shape=(input_size, 1)),
     tf.keras.layers.Conv1D(filters=800, kernel_size=3, activation='elu'),
-    tf.keras.layers.MaxPooling1D(pool_size=3),
+    # tf.keras.layers.MaxPooling1D(pool_size=3), # MaxPooling1D downsizes the model by 2, but the output of the previous one without orient is size 1
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dropout(0.5),
     tf.keras.layers.Dense(800, activation='elu'),
