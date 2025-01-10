@@ -1,0 +1,11 @@
+x_train_file: "x_train_mil.npy"
+y_train_file: "y_train_mil.npy"
+x_test_file: "x_test_mil.npy"
+y_test_file: "y_test_mil.npy"
+simple_rnn:
+  save: True
+  units: 12
+  batch_size: 16
+  epochs: 10
+  verbose: 1
+  lr: 0.01
