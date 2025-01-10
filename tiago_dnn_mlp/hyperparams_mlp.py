@@ -34,7 +34,7 @@ class SimpleMlpModel(kt.HyperModel):
     def fit(self, hp, model, *args, **kwargs):
         return model.fit(
             *args,
-            batch_size=hp.Choice("batch_size", [16, 32]),
+            batch_size=hp.Choice("batch_size", [8, 16, 32, 64]),
             **kwargs,
         )
     
@@ -154,7 +154,7 @@ if __name__ == '__main__':
     input_size = x_train.shape[1]
     output_size = y_train.shape[1]
 
-    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=5)
+    stop_early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=3)
 
     if args.arch == '0':
         print('Tuning hyperparameters for simple_mlp_model')
@@ -164,7 +164,7 @@ if __name__ == '__main__':
                             factor=3,
                             directory='mlp_tuning',
                             project_name='simple_mlp')
-        tuner.search(x_train, y_train, epochs=50, validation_split=0.2, callbacks=[stop_early])
+        tuner.search(x_train, y_train, epochs=50, validation_data=(x_test, y_test), callbacks=[stop_early])
 
     elif args.arch == '1':
         print('Tuning hyperparameters for seven_subnet_mlp_model')

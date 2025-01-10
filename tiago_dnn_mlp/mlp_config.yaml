@@ -4,10 +4,10 @@ x_test_file: "x_test_mil.npy"
 y_test_file: "y_test_mil.npy"
 simple_mlp:
   save: True
-  units: 512
-  batch_size: 32
-  lr: 0.01
-  epochs: 5
+  units: 160
+  batch_size: 16
+  lr: 0.001
+  epochs: 100
   verbose: 1
 seven_subnet_mlp:
   save: True
