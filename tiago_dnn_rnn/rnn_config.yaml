@@ -9,3 +9,9 @@ simple_rnn:
   epochs: 10
   verbose: 1
   lr: 0.01
+lstm:
+  save: True
+  batch_size: 250
+  epochs: 10
+  verbose: 1
+  lr: 0.01
