@@ -26,7 +26,7 @@ output_size = y_train.shape[1]
 
 # Specify the model's architecture
 model = tf.keras.models.Sequential([
-    tf.keras.layers.Flatten(input_shape = [input_size]),
+    tf.keras.layers.Flatten(input_shape=[input_size]),
     tf.keras.layers.Dense(config['simple_mlp']['units'], activation='relu'),
     tf.keras.layers.Dense(output_size, activation='softmax'),
 ])
@@ -48,7 +48,7 @@ callbacks_list = [
     ),
     keras.callbacks.EarlyStopping (
             monitor='val_loss',
-            patience=4,
+            patience=3,
     )
 ]
 
@@ -59,20 +59,8 @@ history = model.fit(
     epochs=config['simple_mlp']['epochs'],
     verbose=config['simple_mlp']['verbose'],
     callbacks=callbacks_list,
-    validation_split=config['simple_mlp']['validation_split'],
-    validation_data=None,
-    shuffle=config['simple_mlp']['shuffle'],
-    class_weight=None,
-    sample_weight=None,
-    initial_epoch=config['simple_mlp']['initial_epoch'],
-    steps_per_epoch=None,
-    validation_steps=None,
-    validation_batch_size=None,
-    validation_freq=config['simple_mlp']['validation_freq'],
+    validation_data=(x_test, y_test)
 )
-
-# Test
-loss, acc = model.evaluate(x_test, y_test)
 
 # Save model
 if config['simple_mlp']['save']:
