@@ -2,38 +2,67 @@
 
 import os
 import yaml
+import argparse
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-with open(os.path.join('/tiago_public_ws/src/tiago_data_generation/', 'config/datagen_controller.yaml')) as f:
-    config = yaml.safe_load(f)
 
-df = pd.read_csv(os.path.join('/home/anacg/.ros', config['datagen_controller']['filename']))
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("norm", help="choose normalization type: 0 for standardization, 1 for min-max normalization, other for none")
+    args = parser.parse_args()
 
-x_cols = ['ee_x', 'ee_y', 'ee_z']
-y_cols = ['arm_1', 'arm_2', 'arm_3', 'arm_4', 'arm_5', 'arm_6', 'arm_7']
+    with open(os.path.join('/tiago_public_ws/src/tiago_data_generation/', 'config/datagen_controller.yaml')) as f:
+        config = yaml.safe_load(f)
 
-# Standardization
-# df = (df - df.mean()) / df.std()
+    df = pd.read_csv(os.path.join('/home/anacg/.ros', config['datagen_controller']['filename']))
 
-# Normalization
-# df = (df - df.min()) / (df.max() - df.min())
+    x_cols = ['ee_x', 'ee_y', 'ee_z']
+    y_cols = ['arm_1', 'arm_2', 'arm_3', 'arm_4', 'arm_5', 'arm_6', 'arm_7']
 
-x = df[x_cols].to_numpy()
-y = df[y_cols].to_numpy()
+    data_stats = {'df_mean_in': df[x_cols].mean().tolist(), 
+                  'df_mean_out': df[y_cols].mean().tolist(),
+                  'df_std_in': df[x_cols].std().tolist(), 
+                  'df_std_out': df[y_cols].std().tolist(),
+                  'df_max_in': df[x_cols].max().tolist(), 
+                  'df_max_out': df[y_cols].max().tolist(),
+                  'df_min_in': df[x_cols].min().tolist(), 
+                  'df_min_out': df[y_cols].min().tolist()}
 
-# Split and save
-x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+    # Standardization
+    if args.norm == '0':
+        df = (df - df.mean()) / df.std()
+        data_stats['norm'] = 'std'
 
-with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/', 'x_train.npy'), 'w') as f:
-    np.save(f, x_train)
+    # Normalization
+    elif args.norm == '1':
+        df = (df - df.min()) / (df.max() - df.min())
+        data_stats['norm'] = 'norm'
 
-with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_train.npy'), 'w') as f:
-    np.save(f, y_train)
+    # None
+    else:
+        data_stats['norm'] = 'none'
 
-with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','x_test.npy'), 'w') as f:
-    np.save(f, x_test)
+    x = df[x_cols].to_numpy()
+    y = df[y_cols].to_numpy()
 
-with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_test.npy'), 'w') as f:
-    np.save(f, y_test)
+    # Split and save
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+
+    name = 'mil_norm'
+
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/', 'x_train_' + name + '.npy'), 'w') as f:
+        np.save(f, x_train)
+
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_train_' + name + '.npy'), 'w') as f:
+        np.save(f, y_train)
+
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','x_test_' + name + '.npy'), 'w') as f:
+        np.save(f, x_test)
+
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_test_' + name + '.npy'), 'w') as f:
+        np.save(f, y_test)
+
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','data_' + name + '.yaml'), 'w') as f:
+        yaml.dump(data_stats, f)
