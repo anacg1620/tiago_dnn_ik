@@ -67,5 +67,7 @@ if config['simple_rnn']['save']:
 
 # Predict
 x_pred = x_test[:1]
+print(x_pred)
+y_exp = y_test[:1]
 y_pred = model.predict(x_pred, batch_size=None, verbose="auto", steps=None, callbacks=None)
-print(f'Input {x_pred}, predicted output {y_pred}')
+print(f'Input {x_pred}, expected output {y_exp}, predicted output {y_pred}')

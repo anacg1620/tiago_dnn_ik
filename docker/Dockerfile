@@ -8,6 +8,6 @@ RUN apt-get update \
 
 # python dependencies
 RUN pip install -q -U \
-pyyaml pydot wandb keras-tuner
+pyyaml pydot wandb keras-tuner pandas
 
 ENV NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=all
