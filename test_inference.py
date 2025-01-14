@@ -29,14 +29,14 @@ elif 'norm' in name:
     input = (input - pd.DataFrame(data['df_min_in'])) / (pd.DataFrame(data['df_max_in']) - pd.DataFrame(data['df_min_in']))
 
 input = input.to_numpy().transpose()
-print(input)
 output = model.predict(input)
 output = pd.DataFrame(output)
 
 # De-standardization or de-normalization of output
 if 'std' in name:
-    output = output * pd.DataFrame(data['df_std_out']) + pd.DataFrame(data['df_mean_out'])
+    output = output * pd.DataFrame(data['df_std_out']).transpose() + pd.DataFrame(data['df_mean_out']).transpose()
 elif 'norm' in name:
-    output = output * (pd.DataFrame(data['df_max_out']) - pd.DataFrame(data['df_min_out'])) + pd.DataFrame(data['df_min_out'])
+    output = output * (pd.DataFrame(data['df_max_out']).transpose() - pd.DataFrame(data['df_min_out']).transpose()) + pd.DataFrame(data['df_min_out']).transpose()
 
+output = output.to_numpy().tolist()
 print(f'For input {input_og}, predicted output is {output}')
