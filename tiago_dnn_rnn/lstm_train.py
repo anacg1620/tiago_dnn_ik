@@ -76,7 +76,7 @@ history = model.fit(
 
 # Save model
 if config['lstm']['save']:
-    model.save('lstm.keras')
+    model.save('lstm_rnn.keras')
     print('Trained model saved to .keras file')
 
 # Predict
