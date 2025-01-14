@@ -10,15 +10,22 @@ from sklearn.model_selection import train_test_split
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("norm", help="choose normalization type: 0 for standardization, 1 for min-max normalization, other for none")
+    parser.add_argument("--norm", help="choose normalization type: 0 for standardization, 1 for min-max normalization, other for none")
+    parser.add_argument("--orient", help="choose whether orientation data is used: 1 for orientation, 0 for just position")
+    parser.add_argument("--name", help="choose name for split data files")
     args = parser.parse_args()
 
     with open(os.path.join('/tiago_public_ws/src/tiago_data_generation/', 'config/datagen_controller.yaml')) as f:
         config = yaml.safe_load(f)
 
+    print('Reading csv dataset from ' + config['datagen_controller']['filename'])
     df = pd.read_csv(os.path.join('/home/anacg/.ros', config['datagen_controller']['filename']))
+    print(df.sample())
 
     x_cols = ['ee_x', 'ee_y', 'ee_z']
+    if args.orient == '1':
+        x_cols = x_cols + ['ee_quat_x', 'ee_quat_y', 'ee_quat_z', 'ee_quat_w']
+
     y_cols = ['arm_1', 'arm_2', 'arm_3', 'arm_4', 'arm_5', 'arm_6', 'arm_7']
 
     data_stats = {'df_mean_in': df[x_cols].mean().tolist(), 
@@ -50,19 +57,17 @@ if __name__ == '__main__':
     # Split and save
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
 
-    name = 'mil_norm'
-
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/', 'x_train_' + name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/', 'x_train_' + args.name + '.npy'), 'w') as f:
         np.save(f, x_train)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_train_' + name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_train_' + args.name + '.npy'), 'w') as f:
         np.save(f, y_train)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','x_test_' + name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','x_test_' + args.name + '.npy'), 'w') as f:
         np.save(f, x_test)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_test_' + name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_test_' + args.name + '.npy'), 'w') as f:
         np.save(f, y_test)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','data_' + name + '.yaml'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','data_' + args.name + '.yaml'), 'w') as f:
         yaml.dump(data_stats, f)
