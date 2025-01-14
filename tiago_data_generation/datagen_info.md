@@ -1,6 +1,6 @@
 # tiago_data_generation
 
-TiAGO data generation for learning IK. Creates a CSV file with joint angles and end-effector positions.
+TiAGO data generation for learning IK. Creates a CSV file with joint angles and end-effector poses.
 
 ## Launch simulation and controller
 
@@ -37,7 +37,7 @@ roslaunch tiago_data_generation tiago_gazebo.launch
 
 Simulation launches without visualization and writes a csv file with the following structure:
 ```csv
-arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint, end_effector_x, end_effector_y, end_effector_z
+arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint, end_effector_x, end_effector_y, end_effector_z, end_effector_quaternion_x, end_effector_quaternion_y, end_effector_quaternion_z, end_effector_quaternion_w
 ```
 
 The file can be found in `/home/username/.ros` and its name can be set from datagen_controller.yaml, as well as the number of points to be generated.
