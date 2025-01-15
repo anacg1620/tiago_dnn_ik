@@ -1,7 +1,7 @@
-x_train_file: "x_train_mil.npy"
-y_train_file: "y_train_mil.npy"
-x_test_file: "x_test_mil.npy"
-y_test_file: "y_test_mil.npy"
+x_train_file: "x_train_rot_matrix_norm.npy"
+y_train_file: "y_train_rot_matrix_norm.npy"
+x_test_file: "x_test_rot_matrix_norm.npy"
+y_test_file: "y_test_rot_matrix_norm.npy"
 simple_mlp:
   save: True
   units: 160
@@ -9,6 +9,8 @@ simple_mlp:
   lr: 0.001
   epochs: 100
   verbose: 1
+  orient_factor: 0.5
+  pos_factor: 0.5
 seven_subnet_mlp:
   save: True
   units1: 16

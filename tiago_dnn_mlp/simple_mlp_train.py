@@ -6,6 +6,45 @@ import tensorflow as tf
 from tensorflow import keras
 import wandb
 
+
+def orientation_error(y_true, y_pred):
+    print(y_true)
+    print(y_pred)
+
+    # TODO: types below. how to access elements?
+    # Tensor("IteratorGetNext:1", shape=(None, 7), dtype=float32)
+    # Tensor("sequential/dense_1/Softmax:0", shape=(None, 7), dtype=float32)
+
+    orient_true = y_true[2:]
+    orient_pred = y_pred[2:]
+
+    print(orient_true)
+    print(orient_pred)
+
+    return 0
+
+
+def position_error(y_true, y_pred):
+    print(y_true)
+    print(y_pred)
+
+    pos_true = y_true[:2]
+    pos_pred = y_pred[:2]
+
+    print(pos_true)
+    print(pos_pred)
+
+    return 0
+
+
+def custom_loss(y_true, y_pred):
+    orient_error = orientation_error(y_true, y_pred)
+    pos_error = position_error(y_true, y_pred)
+
+    return config['simple_mlp']['orient_factor'] * orient_error + \
+           config['simple_mlp']['pos_factor'] * pos_error
+
+
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
 
@@ -33,9 +72,10 @@ model = tf.keras.models.Sequential([
 
 # Specify the loss fuction, optimizer, metrics
 model.compile(
-    loss = 'mean_squared_error',
+    loss = custom_loss,
     optimizer = tf.keras.optimizers.Adam(learning_rate=config['simple_mlp']['lr']),
-    metrics = ['mean_squared_error']
+    metrics = ['accuracy', 'mean_squared_error', orientation_error, position_error],
+    run_eagerly=True # to access individual elements in loss funct 
 )
 
 model.summary()
