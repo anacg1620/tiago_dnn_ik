@@ -8,33 +8,17 @@ import wandb
 
 
 def orientation_error(y_true, y_pred):
-    print(y_true)
-    print(y_pred)
-
-    # TODO: types below. how to access elements?
-    # Tensor("IteratorGetNext:1", shape=(None, 7), dtype=float32)
-    # Tensor("sequential/dense_1/Softmax:0", shape=(None, 7), dtype=float32)
-
-    orient_true = y_true[2:]
-    orient_pred = y_pred[2:]
-
-    print(orient_true)
-    print(orient_pred)
+    orient_true = y_true[:, 3:]
+    orient_pred = y_pred[:, 3:]
 
     return 0
 
 
 def position_error(y_true, y_pred):
-    print(y_true)
-    print(y_pred)
+    pos_true = y_true[:, :3]
+    pos_pred = y_pred[:, :3]
 
-    pos_true = y_true[:2]
-    pos_pred = y_pred[:2]
-
-    print(pos_true)
-    print(pos_pred)
-
-    return 0
+    return tf.math.squared_difference(pos_true, pos_pred)
 
 
 def custom_loss(y_true, y_pred):
@@ -48,7 +32,7 @@ def custom_loss(y_true, y_pred):
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
 
-wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True, config=config['simple_mlp'])
+# wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True, config=config['simple_mlp'])
 
 x_train = np.load(f"../data/{config['x_train_file']}")
 y_train = np.load(f"../data/{config['y_train_file']}")

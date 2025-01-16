@@ -1,7 +1,7 @@
-x_train_file: "x_train_rot_matrix_norm.npy"
-y_train_file: "y_train_rot_matrix_norm.npy"
-x_test_file: "x_test_rot_matrix_norm.npy"
-y_test_file: "y_test_rot_matrix_norm.npy"
+x_train_file: "x_train_orient.npy"
+y_train_file: "y_train_orient.npy"
+x_test_file: "x_test_orient.npy"
+y_test_file: "y_test_orient.npy"
 simple_mlp:
   save: True
   units: 160
