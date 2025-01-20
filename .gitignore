@@ -47,3 +47,4 @@
 **/logs
 **/wandb
 **/*_tuning
+**/__pycache__

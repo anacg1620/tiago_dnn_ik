@@ -1,38 +1,17 @@
 #!/usr/bin/env python
 
 import yaml
+import wandb
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
-import wandb
-
-
-def orientation_error(y_true, y_pred):
-    orient_true = y_true[:, 3:]
-    orient_pred = y_pred[:, 3:]
-
-    return 0
-
-
-def position_error(y_true, y_pred):
-    pos_true = y_true[:, :3]
-    pos_pred = y_pred[:, :3]
-
-    return tf.math.squared_difference(pos_true, pos_pred)
-
-
-def custom_loss(y_true, y_pred):
-    orient_error = orientation_error(y_true, y_pred)
-    pos_error = position_error(y_true, y_pred)
-
-    return config['simple_mlp']['orient_factor'] * orient_error + \
-           config['simple_mlp']['pos_factor'] * pos_error
+import custom_metrics
 
 
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
 
-# wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True, config=config['simple_mlp'])
+wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True, config=config['simple_mlp'])
 
 x_train = np.load(f"../data/{config['x_train_file']}")
 y_train = np.load(f"../data/{config['y_train_file']}")
@@ -55,12 +34,21 @@ model = tf.keras.models.Sequential([
 ])
 
 # Specify the loss fuction, optimizer, metrics
-model.compile(
-    loss = custom_loss,
-    optimizer = tf.keras.optimizers.Adam(learning_rate=config['simple_mlp']['lr']),
-    metrics = ['accuracy', 'mean_squared_error', orientation_error, position_error],
-    run_eagerly=True # to access individual elements in loss funct 
-)
+if input_size == 3:
+    model.compile(
+        loss = 'mean_squared_error',
+        optimizer = tf.keras.optimizers.Adam(learning_rate=config['simple_mlp']['lr']),
+        metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error],
+        run_eagerly=True # to access individual elements in loss funct 
+    )
+elif input_size == 7:
+    model.compile(
+        loss = 'mean_squared_error',
+        optimizer = tf.keras.optimizers.Adam(learning_rate=config['simple_mlp']['lr']),
+        metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error, 
+                   custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
+        run_eagerly=True # to access individual elements in loss funct 
+    )
 
 model.summary()
 keras.utils.plot_model(model, 'simple_mlp_model.png', show_shapes=True)
