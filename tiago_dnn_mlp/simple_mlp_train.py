@@ -49,6 +49,15 @@ elif input_size == 7:
                    custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
         run_eagerly=True # to access individual elements in loss funct 
     )
+elif input_size == 12:
+    model.compile(
+        loss = 'mean_squared_error',
+        optimizer = tf.keras.optimizers.Adam(learning_rate=config['simple_mlp']['lr']),
+        metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error],
+        run_eagerly=True # to access individual elements in loss funct 
+    )
+else:
+    raise Exception('Data format not recognized')
 
 model.summary()
 keras.utils.plot_model(model, 'simple_mlp_model.png', show_shapes=True)

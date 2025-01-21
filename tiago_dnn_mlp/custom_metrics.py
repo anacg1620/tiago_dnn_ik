@@ -9,29 +9,24 @@ from pykin.robots.single_arm import SingleArm
 file_path = 'urdf/tiago/tiago.urdf'
 robot = SingleArm(file_path)
 
-angles = [0, 0, 0, 0, 0, 0, 0]
-fk = robot.forward_kin(angles)
-for link, transform in fk.items():
-    if link == 'tiago_link_ee':
-        print(f"{link}, {transform.pos}, {transform.rot}")
-
-
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
 
 
-def position_error(y_true, y_pred):
-    pos_true = y_true[:, :3]
-    pos_pred = y_pred[:, :3]
+########### POSITION ###########
 
-    return tf.math.squared_difference(pos_true, pos_pred)
+def position_error(y_true, y_pred):
+    fk_true = [robot.forward_kin(y)['tiago_link_ee'].pos for y in y_true]
+    fk_pred = [robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred]
+
+    return tf.math.squared_difference(fk_true, fk_pred)
 
 
 ########### QUATERNIONS ###########
 
 def quaternion_error_1(y_true, y_pred):
-    orient_true = y_true[:, 3:].numpy()
-    orient_pred = y_pred[:, 3:].numpy()
+    orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
+    orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
 
     dif1 = np.linalg.norm(orient_true - orient_pred, axis=1)
     dif2 = np.linalg.norm(orient_true + orient_pred, axis=1)
@@ -40,8 +35,8 @@ def quaternion_error_1(y_true, y_pred):
 
 
 def quaternion_error_2(y_true, y_pred):
-    orient_true = y_true[:, 3:].numpy()
-    orient_pred = y_pred[:, 3:].numpy()
+    orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
+    orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
 
     prod = np.sum(orient_true * orient_pred, axis=1)
 
@@ -49,8 +44,8 @@ def quaternion_error_2(y_true, y_pred):
 
 
 def quaternion_error_3(y_true, y_pred):
-    orient_true = y_true[:, 3:]
-    orient_pred = y_pred[:, 3:]
+    orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
+    orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
 
     prod = np.sum(orient_true * orient_pred, axis=1)
 
