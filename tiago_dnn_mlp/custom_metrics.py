@@ -1,9 +1,19 @@
 #!/usr/bin/env python
 
 import yaml
-import math
 import tensorflow as tf
 import numpy as np
+from pykin.robots.single_arm import SingleArm
+
+
+file_path = 'urdf/tiago/tiago.urdf'
+robot = SingleArm(file_path)
+
+angles = [0, 0, 0, 0, 0, 0, 0]
+fk = robot.forward_kin(angles)
+for link, transform in fk.items():
+    if link == 'tiago_link_ee':
+        print(f"{link}, {transform.pos}, {transform.rot}")
 
 
 with open('mlp_config.yaml') as f:
