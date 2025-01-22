@@ -50,3 +50,32 @@ def quaternion_error_3(y_true, y_pred):
     prod = np.sum(orient_true * orient_pred, axis=1)
 
     return 1 - np.abs(prod)
+
+
+########### ROTATION MATRIX ###########
+
+def rotmatrix_error_1(y_true, y_pred):
+    orient_true = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_true])
+    orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
+    rot = np.einsum('fij,fjk->fik', orient_true, np.transpose(orient_pred, axes=(0, 2, 1)))
+
+    return np.arccos((rot.trace(axis1=1, axis2=2) - 1) / 2)
+
+
+def rotmatrix_error_2(y_true, y_pred):
+    orient_true = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_true])
+    orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
+
+    return np.linalg.norm(orient_true - orient_pred, ord='fro', axis=(1, 2))
+
+
+def rotmatrix_error_3(y_true, y_pred):
+    orient_true = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_true])
+    orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
+
+    rot = np.einsum('fij,fjk->fik', np.transpose(orient_true, axes=(0, 2, 1)), orient_pred)
+    angle = np.arccos((rot.trace(axis1=1, axis2=2) - 1) / 2)
+    # log as in https://lcvmwww.epfl.ch/publications/data/articles/63/Means_and_Averaging_in_the_Group_of_Rotations.pdf page 3
+    rotlog = (angle / (2 * np.sin(angle)))[:, None, None] * (rot - np.transpose(rot, axes=(0, 2, 1)))
+
+    return 1 / np.sqrt(2) * np.linalg.norm(rotlog, ord='fro', axis=(1, 2))
