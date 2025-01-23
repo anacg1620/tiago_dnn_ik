@@ -13,7 +13,7 @@ Run `data_preprocessing.py` from tiago_data_generation scripts. This creates fou
 
 For example, running
 ```bash
-rosrun data_preprocessing.py --norm=1 --orient=1 --name='name'
+rosrun tiago_data_generation data_preprocessing.py --norm=1 --orient=1 --name='name'
 ```
 will produce files named "x_train_name.npy", "x_test_name.npy", etc, which will contain normalized pose inputs (position+orientation) and normalized joint outputs.
 

@@ -19,7 +19,7 @@ if __name__ == '__main__':
         config = yaml.safe_load(f)
 
     print('Reading csv dataset from ' + config['datagen_controller']['filename'])
-    df = pd.read_csv(os.path.join('/home/anacg/.ros', config['datagen_controller']['filename']))
+    df = pd.read_csv(os.path.join('/home/anacg/.ros', config['datagen_controller']['filename']), lineterminator='\n')
     print(df.sample())
 
     x_cols = ['ee_x', 'ee_y', 'ee_z']
