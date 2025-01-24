@@ -11,7 +11,6 @@ from sklearn.model_selection import train_test_split
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--norm", help="choose normalization type: 0 for standardization, 1 for min-max normalization, other for none")
-    parser.add_argument("--orient", help="choose orientation type: 1 for quaternions, 2 for rotation matrix, 0 for just position")
     parser.add_argument("--name", help="choose name for split data files")
     args = parser.parse_args()
 
@@ -23,9 +22,9 @@ if __name__ == '__main__':
     print(df.sample())
 
     x_cols = ['ee_x', 'ee_y', 'ee_z']
-    if args.orient == '1':
+    if config['datagen_controller']['orient'] == 'quaternion':
         x_cols = x_cols + ['ee_quat_x', 'ee_quat_y', 'ee_quat_z', 'ee_quat_w']
-    elif args.orient == '2':
+    elif config['datagen_controller']['orient'] == 'matrix':
         x_cols = x_cols + ['ee_rot_00', 'ee_rot_01', 'ee_rot_02', 'ee_rot_10', 'ee_rot_11', 'ee_rot_12', 'ee_rot_20', 'ee_rot_21', 'ee_rot_22']
 
     y_cols = ['arm_1', 'arm_2', 'arm_3', 'arm_4', 'arm_5', 'arm_6', 'arm_7']
