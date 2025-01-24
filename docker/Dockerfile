@@ -15,6 +15,8 @@ RUN apt install -y --no-install-recommends liboctomap-dev libfcl-dev
 RUN git clone https://github.com/jdj2261/pykin.git
 RUN cd pykin && python3 setup.py install
 RUN mkdir /usr/local/lib/python3.11/dist-packages/pykin-1.6.0-py3.11.egg/pykin/assets/urdf/tiago/
+RUN mkdir /usr/local/lib/python3.11/dist-packages/pykin-1.6.0-py3.11.egg/pykin/assets/urdf/tiago/tiago/
 COPY data/urdf/ /usr/local/lib/python3.11/dist-packages/pykin-1.6.0-py3.11.egg/pykin/assets/urdf/tiago/
+COPY data/urdf/meshes /usr/local/lib/python3.11/dist-packages/pykin-1.6.0-py3.11.egg/pykin/assets/urdf/tiago/tiago/meshes/
 
 ENV NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=all
