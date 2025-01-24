@@ -46,6 +46,7 @@ private:
 
   int num_pos;
   int num = 0;
+  std::string orient;
 
   std::vector<std::uniform_real_distribution<float>> distrs;
   std::string filename;

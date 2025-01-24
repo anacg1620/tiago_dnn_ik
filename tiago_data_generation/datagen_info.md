@@ -35,9 +35,18 @@ source /tiago_public_ws/devel/setup.bash
 roslaunch tiago_data_generation tiago_gazebo.launch
 ```
 
-Simulation launches without visualization and writes a csv file with the following structure:
+Simulation launches without visualization and writes a csv file. The structure of the csv depends on the `orient` argument in `datagen_controller.yaml`.
+If `orient = "quaternion"`, the structure is:
 ```csv
 arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint, end_effector_x, end_effector_y, end_effector_z, end_effector_quaternion_x, end_effector_quaternion_y, end_effector_quaternion_z, end_effector_quaternion_w
 ```
+If `orient = "matrix"`, the structure is:
+```csv
+arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint, end_effector_x, end_effector_y, end_effector_z, end_effector_rotation_matrix_00, end_effector_rotation_matrix_01, end_effector_rotation_matrix_02, end_effector_rotation_matrix_10, end_effector_rotation_matrix_11, end_effector_rotation_matrix_12, end_effector_rotation_matrix_20, end_effector_rotation_matrix_21, end_effector_rotation_matrix_22
+```
+In any other case, it is:
+```csv
+arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, arm_7_joint, end_effector_x, end_effector_y, end_effector_z
+```
 
-The file can be found in `/home/username/.ros` and its name can be set from datagen_controller.yaml, as well as the number of points to be generated.
+The file can be found in `/home/username/.ros` and its name can be set from `datagen_controller.yaml`, as well as the number of points to be generated.

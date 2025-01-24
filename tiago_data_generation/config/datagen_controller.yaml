@@ -5,3 +5,4 @@ datagen_controller:
   end_link: "gripper_grasping_frame"
   num_pos: 1000
   filename: "datagen_1000_columns.csv"
+  orient: "quaternion"  # choose quaternion, matrix or none

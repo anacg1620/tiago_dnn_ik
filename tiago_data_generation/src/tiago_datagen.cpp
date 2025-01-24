@@ -94,6 +94,12 @@ bool DatagenController::init(hardware_interface::PositionJointInterface* hw, ros
         return false;
     }
 
+    if (!n.getParam("orient", orient))
+    {
+        ROS_ERROR("Could not find orientation parameter");
+        return false;
+    }
+
     if (!n.getParam("filename", filename))
     {
         ROS_ERROR("Could not find filename parameter");
@@ -101,11 +107,25 @@ bool DatagenController::init(hardware_interface::PositionJointInterface* hw, ros
     }
 
     file.open(filename);
-    if (!file.is_open()) {
+    if (!file.is_open()) 
+    {
         std::cerr << "Failed to open file!" << std::endl;
         return 1;
     }
-    file << "arm_1,arm_2,arm_3,arm_4,arm_5,arm_6,arm_7,ee_x,ee_y,ee_z,ee_rot_00,ee_rot_01,ee_rot_02,ee_rot_10,ee_rot_11,ee_rot_12,ee_rot_20,ee_rot_21,ee_rot_22\n";
+
+    if (orient == "quaternion") 
+    {
+        file << "arm_1,arm_2,arm_3,arm_4,arm_5,arm_6,arm_7,ee_x,ee_y,ee_z,ee_quat_x,ee_quat_y,ee_quat_z,ee_quat_w\n";    
+    }
+    else if (orient == "matrix") 
+    {
+        file << "arm_1,arm_2,arm_3,arm_4,arm_5,arm_6,arm_7,ee_x,ee_y,ee_z,ee_rot_00,ee_rot_01,ee_rot_02,ee_rot_10,ee_rot_11,ee_rot_12,ee_rot_20,ee_rot_21,ee_rot_22\n";
+    }
+    else 
+    {
+        file << "arm_1,arm_2,arm_3,arm_4,arm_5,arm_6,arm_7,ee_x,ee_y,ee_z\n";
+    }
+
     begin = ros::Time::now();
 
     return true;
@@ -142,15 +162,26 @@ void DatagenController::update(const ros::Time& time, const ros::Duration& perio
         data.push_back(H_root_ee.p[2]);
 
         // get orientation
-        data.push_back(H_root_ee.M(0, 0));
-        data.push_back(H_root_ee.M(0, 1));
-        data.push_back(H_root_ee.M(0, 2));
-        data.push_back(H_root_ee.M(1, 0));
-        data.push_back(H_root_ee.M(1, 1));
-        data.push_back(H_root_ee.M(1, 2));
-        data.push_back(H_root_ee.M(2, 0));
-        data.push_back(H_root_ee.M(2, 1));
-        data.push_back(H_root_ee.M(2, 2));
+        if (orient == "quaternion") {
+            double x, y, z, w;
+            H_root_ee.M.GetQuaternion(x, y, z, w);
+            data.push_back(x);
+            data.push_back(y);
+            data.push_back(z);
+            data.push_back(w);
+        }
+
+        else if (orient == "matrix") {
+            data.push_back(H_root_ee.M(0, 0));
+            data.push_back(H_root_ee.M(0, 1));
+            data.push_back(H_root_ee.M(0, 2));
+            data.push_back(H_root_ee.M(1, 0));
+            data.push_back(H_root_ee.M(1, 1));
+            data.push_back(H_root_ee.M(1, 2));
+            data.push_back(H_root_ee.M(2, 0));
+            data.push_back(H_root_ee.M(2, 1));
+            data.push_back(H_root_ee.M(2, 2));
+        }
 
         // workspace size filters
         // TODO: root is torso lift link, so the floor is not at 0 but lower
