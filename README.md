@@ -11,7 +11,7 @@ bash docker/build.sh
 bash docker/run.sh
 python3 tiago_data_generation/pykin_generation.py
 ```
-Urdf and meshes must be in `data/urdf` folder before building docker container. Current urdf comes from [here](https://gitioc.upc.edu/rostutorials/ktmpb/-/blob/d9caa6ef59ffe14d557de47f60590e62d4cf4efa/demos/models/robots/tiago/tiago_with_gripper.urdf)
+Urdf and meshes must be in `data/urdf` folder before building docker container. Current urdf comes from [here](https://gitioc.upc.edu/rostutorials/ktmpb/-/blob/d9caa6ef59ffe14d557de47f60590e62d4cf4efa/demos/models/robots/tiago/)
 
 ## Step 2: Data preprocessing
 Run `data_preprocessing.py` from tiago_data_generation scripts. This creates four files `x_train`, `x_test`, `y_train` and `y_test` in the data folder. This scripts needs 3 parameters, namely:
