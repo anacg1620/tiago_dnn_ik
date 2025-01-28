@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
             fk = robot.forward_kin(pos)
             shoulder_pos = fk['arm_1_link']
-            fk = fk['arm_7_link']
+            fk = fk['tiago_link_ee']
 
             if fk.pos[2] > 0.3 and np.linalg.norm(shoulder_pos.pos - fk.pos) < 0.8:
                 if args.orient == 'quaternion':

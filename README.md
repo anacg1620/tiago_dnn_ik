@@ -50,3 +50,12 @@ To build and train the DNN models, tensorflow is needed, so build and run the do
 
 Move to the desired DNN model folder and run the training with python. Parameters can be modified by changing the corresponding yaml.
 Hyperparameter tuning can be performed by running the corresponding script with python. Additional arguments may be neccesary if more than one model is available in the selected folder.
+
+For example, to run the simple_mlp model training, do:
+```bash
+cd tiago_dnn_mlp/
+python3 simple_mlp_training.py
+```
+and select split training and validation files in `mlp_config.yaml`, as well as batch size, learning rate, epochs and other hyperparameters. You can also select if the resulting trained model is saved in a .keras file. 
+
+The evolution of the different metrics can be followed in [Weights & Biases](https://wandb.ai/100518472/tiago_ik?nw=nwuser100518472).
