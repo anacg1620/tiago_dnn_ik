@@ -12,6 +12,9 @@ robot = SingleArm(file_path)
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
 
+orient_true = []
+orient_pred = []
+
 
 ########### POSITION ###########
 
@@ -25,6 +28,8 @@ def position_error(y_true, y_pred):
 ########### QUATERNIONS ###########
 
 def quaternion_error_1(y_true, y_pred):
+    global orient_true
+    global orient_pred
     orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
     orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
 
@@ -35,8 +40,8 @@ def quaternion_error_1(y_true, y_pred):
 
 
 def quaternion_error_2(y_true, y_pred):
-    orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
-    orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
+    global orient_true
+    global orient_pred
 
     prod = np.sum(orient_true * orient_pred, axis=1)
 
@@ -44,8 +49,8 @@ def quaternion_error_2(y_true, y_pred):
 
 
 def quaternion_error_3(y_true, y_pred):
-    orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
-    orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
+    global orient_true
+    global orient_pred
 
     prod = np.sum(orient_true * orient_pred, axis=1)
 
@@ -55,6 +60,8 @@ def quaternion_error_3(y_true, y_pred):
 ########### ROTATION MATRIX ###########
 
 def rotmatrix_error_1(y_true, y_pred):
+    global orient_true
+    global orient_pred
     orient_true = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_true])
     orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
 
@@ -66,15 +73,15 @@ def rotmatrix_error_1(y_true, y_pred):
 
 
 def rotmatrix_error_2(y_true, y_pred):
-    orient_true = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_true])
-    orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
+    global orient_true
+    global orient_pred
 
     return np.linalg.norm(orient_true - orient_pred, ord='fro', axis=(1, 2))
 
 
 def rotmatrix_error_3(y_true, y_pred):
-    orient_true = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_true])
-    orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
+    global orient_true
+    global orient_pred
 
     rot = np.einsum('fij,fjk->fik', np.transpose(orient_true, axes=(0, 2, 1)), orient_pred)
     angle = np.arccos((rot.trace(axis1=1, axis2=2) - 1) / 2)
@@ -87,8 +94,8 @@ def rotmatrix_error_3(y_true, y_pred):
 
 
 def rotmatrix_error_4(y_true, y_pred):
-    orient_true = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_true])
-    orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
+    global orient_true
+    global orient_pred
     
     rot = np.einsum('fij,fjk->fik', orient_true, np.transpose(orient_pred, axes=(0, 2, 1)))
     dif = np.identity(3) - rot
