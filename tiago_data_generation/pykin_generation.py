@@ -27,14 +27,19 @@ def show_info(robot):
     p_utils.show_figure()
 
 
-def show_stats(file):
-    df = pd.read_csv(file)
+def show_stats(file, orient):
+    df = pd.read_csv(f'{file}.csv')
     df['distance'] = np.sqrt(np.square(df['ee_x']) + np.square(df['ee_y']) + np.square(df['ee_z']))
 
     vbles = ['ee_x', 'ee_y', 'ee_z', 'distance']
 
     # Generated data
-    print(df[vbles].describe())
+    if orient == 'quaternion':
+        print(df[vbles + ['ee_quat_x','ee_quat_y','ee_quat_z','ee_quat_w']].describe())
+    elif orient == 'matrix':
+        print(df[vbles + ['ee_rot_00','ee_rot_01','ee_rot_02','ee_rot_10','ee_rot_11','ee_rot_12','ee_rot_20','ee_rot_21','ee_rot_22']].describe())
+    else:
+        print(df[vbles].describe())
 
     plt.figure(figsize=(20, 20))
     colors = plt.cm.viridis(np.linspace(0, 1, len(vbles)))
@@ -46,6 +51,7 @@ def show_stats(file):
         plt.tight_layout()
 
     plt.savefig(f'{file}_stats.png')
+    print(f'See data stats in {file}_stats.png')
 
 
 if __name__ == '__main__':
@@ -61,8 +67,9 @@ if __name__ == '__main__':
     # show_info(robot)
 
     limits = {}
+    dist_to_limits = 0.2
     for joint in joint_names:
-        limits[joint] = {'lower': robot.joints[joint].limit[0], 'upper': robot.joints[joint].limit[1]}
+        limits[joint] = {'lower': robot.joints[joint].limit[0] + dist_to_limits, 'upper': robot.joints[joint].limit[1] - dist_to_limits}
 
     # generate positions
     i = 0
@@ -83,9 +90,11 @@ if __name__ == '__main__':
             for joint in joint_names:
                 pos.append(random.uniform(limits[joint]['lower'], limits[joint]['upper']))
 
-            fk = robot.forward_kin(pos)['arm_7_link']
+            fk = robot.forward_kin(pos)
+            shoulder_pos = fk['arm_1_link']
+            fk = fk['arm_7_link']
 
-            if fk.pos[2] > 0.3:
+            if fk.pos[2] > 0.3 and np.linalg.norm(shoulder_pos.pos - fk.pos) < 0.8:
                 if args.orient == 'quaternion':
                     csvwriter.writerow(pos + fk.pos.tolist() + fk.rot.tolist())
                 elif args.orient == 'matrix':
@@ -98,4 +107,5 @@ if __name__ == '__main__':
 
         pbar.close()
 
-    # show_stats(f'data/{args.file}.csv')
+    print(f'Data saved to data/{args.file}.csv')
+    show_stats(f'data/{args.file}', args.orient)
