@@ -3,6 +3,9 @@
 import argparse
 import random
 import csv
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 from tqdm import tqdm
 from pykin.robots.single_arm import SingleArm
 from pykin.kinematics.transform import Transform
@@ -22,6 +25,27 @@ def show_info(robot):
                 only_visible_geom=True,
                 alpha=1)
     p_utils.show_figure()
+
+
+def show_stats(file):
+    df = pd.read_csv(file)
+    df['distance'] = np.sqrt(np.square(df['ee_x']) + np.square(df['ee_y']) + np.square(df['ee_z']))
+
+    vbles = ['ee_x', 'ee_y', 'ee_z', 'distance']
+
+    # Generated data
+    print(df[vbles].describe())
+
+    plt.figure(figsize=(20, 20))
+    colors = plt.cm.viridis(np.linspace(0, 1, len(vbles)))
+
+    for i, col in enumerate(vbles):
+        plt.subplot(2, 3, i + 1)
+        plt.hist(df[col], color=colors[i])
+        plt.title(col)
+        plt.tight_layout()
+
+    plt.savefig(f'{file}_stats.png')
 
 
 if __name__ == '__main__':
@@ -60,18 +84,18 @@ if __name__ == '__main__':
                 pos.append(random.uniform(limits[joint]['lower'], limits[joint]['upper']))
 
             fk = robot.forward_kin(pos)['arm_7_link']
-            jointpos = ','.join([str(i) for i in pos])
-            fkpos = ','.join([str(i) for i in fk.pos])
 
             if fk.pos[2] > 0.3:
                 if args.orient == 'quaternion':
-                    csvwriter.writerow([jointpos, fkpos, ','.join([str(i) for i in fk.rot])])
+                    csvwriter.writerow(pos + fk.pos.tolist() + fk.rot.tolist())
                 elif args.orient == 'matrix':
-                    csvwriter.writerow([jointpos, fkpos, ','.join([str(i) for i in fk.rotation_matrix])])
+                    csvwriter.writerow(pos + fk.pos.tolist() + fk.rotation_matrix.flatten().tolist())
                 else:
-                    csvwriter.writerow([jointpos, fkpos])
+                    csvwriter.writerow(pos + fk.pos.tolist())
 
                 i += 1
                 pbar.update(1)
 
         pbar.close()
+
+    # show_stats(f'data/{args.file}.csv')
