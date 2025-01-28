@@ -50,3 +50,16 @@ arm_1_joint, arm_2_joint, arm_3_joint, arm_4_joint, arm_5_joint, arm_6_joint, ar
 ```
 
 The file can be found in `/home/username/.ros` and its name can be set from `datagen_controller.yaml`, as well as the number of points to be generated.
+
+## Preprocessing
+
+Run `data_preprocessing.py` from tiago_data_generation scripts. This creates four files `x_train`, `x_test`, `y_train` and `y_test` in the data folder. This scripts needs 3 parameters, namely:
+- `--norm`: chooses normalization type: 0 for standardization, 1 for min-max normalization, other for none
+- `--orient`: chooses whether orientation data is used: 1 for pose, 0 for just position
+- `--name`: choose name for split data files.
+
+For example, running
+```bash
+rosrun tiago_data_generation data_preprocessing.py --norm=1 --orient=1 --name='name'
+```
+will produce files named "x_train_name.npy", "x_test_name.npy", etc, which will contain normalized pose inputs (position+orientation) and normalized joint outputs.

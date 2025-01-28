@@ -73,7 +73,7 @@ if __name__ == '__main__':
 
     # generate positions
     i = 0
-    with open(f'data/{args.file}.csv', 'w', newline='') as csvfile:
+    with open(f'data/pykin/{args.file}.csv', 'w', newline='') as csvfile:
         csvwriter = csv.writer(csvfile)
         if args.orient == 'quaternion':
             csvwriter.writerow(['arm_1','arm_2','arm_3','arm_4','arm_5','arm_6','arm_7','ee_x','ee_y','ee_z',
@@ -107,5 +107,5 @@ if __name__ == '__main__':
 
         pbar.close()
 
-    print(f'Data saved to data/{args.file}.csv')
-    show_stats(f'data/{args.file}', args.orient)
+    print(f'Data saved to data/pykin/{args.file}.csv')
+    show_stats(f'data/pykin/{args.file}', args.orient)

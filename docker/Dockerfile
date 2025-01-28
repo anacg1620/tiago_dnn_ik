@@ -8,7 +8,7 @@ RUN apt-get update \
 
 # python dependencies
 RUN pip install -q -U \
-pyyaml pydot wandb keras-tuner pandas
+pyyaml pydot wandb keras-tuner pandas scikit-learn
 
 # python fk
 RUN apt install -y --no-install-recommends liboctomap-dev libfcl-dev
