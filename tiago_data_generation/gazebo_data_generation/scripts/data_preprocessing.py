@@ -58,17 +58,17 @@ if __name__ == '__main__':
     # Split and save
     x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/', 'x_train_' + args.name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/gazebo/' + args.name + '/x_train_curr1.npy'), 'w') as f:
         np.save(f, x_train)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_train_' + args.name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/gazebo/' + args.name + '/y_train_curr1.npy'), 'w') as f:
         np.save(f, y_train)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','x_test_' + args.name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/gazebo/' + args.name + '/x_test_curr1.npy'), 'w') as f:
         np.save(f, x_test)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','y_test_' + args.name + '.npy'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/gazebo/' + args.name + '/y_test_curr1.npy'), 'w') as f:
         np.save(f, y_test)
 
-    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/','data_' + args.name + '.yaml'), 'w') as f:
+    with open(os.path.join('/home/anacg/repos/tiago/tiago_dnn_ik/data/gazebo/' + args.name + 'data_stats.yaml'), 'w') as f:
         yaml.dump(data_stats, f)

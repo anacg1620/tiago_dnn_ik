@@ -1,7 +1,4 @@
-x_train_file: "x_train_orient.npy"
-y_train_file: "y_train_orient.npy"
-x_test_file: "x_test_orient.npy"
-y_test_file: "y_test_orient.npy"
+data_dir: "pykin/test"
 simple_mlp:
   save: True
   units: 160

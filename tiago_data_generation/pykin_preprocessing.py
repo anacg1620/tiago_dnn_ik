@@ -69,7 +69,7 @@ if __name__ == '__main__':
 
     curr_sizes = []
     for i in range(args.curr):
-        df_curr = df[df['distance'].between(bounds[i], bounds[i+1])]
+        df_curr = df[df['distance'].between(bounds[0], bounds[i+1])]
         curr_sizes.append(df_curr.shape[0])
 
         x = df_curr[x_cols].to_numpy()
@@ -91,6 +91,7 @@ if __name__ == '__main__':
             np.save(f, y_test)
 
     with open(f'data/pykin/{args.name}/data_stats.yaml', 'w') as f:
+        data_stats['curriculums'] = args.curr
         yaml.dump(data_stats, f)
 
     print('Done! Files split and saved')

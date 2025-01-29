@@ -11,17 +11,16 @@ import custom_metrics
 with open('mlp_config.yaml') as f:
     config = yaml.safe_load(f)
 
-wandb.init(project='tiago_ik', name='simple_mlp', tensorboard=True, config=config['simple_mlp'])
+with open(f"../data/{config['data_dir']}/data_stats.yaml") as f:
+    stats = yaml.safe_load(f)
 
-x_train = np.load(f"../data/{config['x_train_file']}")
-y_train = np.load(f"../data/{config['y_train_file']}")
-x_test = np.load(f"../data/{config['x_test_file']}")
-y_test = np.load(f"../data/{config['y_test_file']}")
+wandb.init(project='tiago_ik', name='pykin_simple_mlp', tensorboard=True, config=config['simple_mlp'])
+
+x_train = np.load(f"../data/{config['data_dir']}/x_train_curr1.npy")
+y_train = np.load(f"../data/{config['data_dir']}/y_train_curr1.npy")
 
 print("x_train shape :", x_train.shape)
-print("x_test shape :", x_test.shape)
 print("y_train shape :", y_train.shape)
-print("y_test shape :", y_test.shape)
 
 input_size = x_train.shape[1]
 output_size = y_train.shape[1]
@@ -74,23 +73,24 @@ callbacks_list = [
     )
 ]
 
-history = model.fit(
-    x=x_train,
-    y=y_train,
-    batch_size=config['simple_mlp']['batch_size'],
-    epochs=config['simple_mlp']['epochs'],
-    verbose=config['simple_mlp']['verbose'],
-    callbacks=callbacks_list,
-    validation_data=(x_test, y_test)
-)
+history = []
+for i in range(stats['curriculums']):
+    x_train = np.load(f"../data/{config['data_dir']}/x_train_curr{i+1}.npy")
+    y_train = np.load(f"../data/{config['data_dir']}/y_train_curr{i+1}.npy")
+    x_test = np.load(f"../data/{config['data_dir']}/x_test_curr{i+1}.npy")
+    y_test = np.load(f"../data/{config['data_dir']}/y_test_curr{i+1}.npy")
+
+    history.append(model.fit(
+        x=x_train,
+        y=y_train,
+        batch_size=config['simple_mlp']['batch_size'],
+        epochs=config['simple_mlp']['epochs'],
+        verbose=config['simple_mlp']['verbose'],
+        callbacks=callbacks_list,
+        validation_data=(x_test, y_test)
+    ))
 
 # Save model
 if config['simple_mlp']['save']:
     model.save('simple_mlp.keras')
     print('Trained model saved to .keras file')
-
-# Predict
-x_pred = x_test[:1]
-y_exp = y_test[:1]
-y_pred = model.predict(x_pred, batch_size=None, verbose="auto", steps=None, callbacks=None)
-print(f'Input {x_pred}, expected output {y_exp}, predicted output {y_pred}')
