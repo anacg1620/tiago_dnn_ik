@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
+import os
 import yaml
 import argparse
+import shutil
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from pykin.robots.single_arm import SingleArm
+from pykin.kinematics.transform import Transform
 
 
 if __name__ == '__main__':
@@ -12,6 +16,7 @@ if __name__ == '__main__':
     parser.add_argument("--file", help="choose input csv filename", type=str)
     parser.add_argument("--norm", help="choose normalization type: 0 for standardization, 1 for min-max normalization, other for none")
     parser.add_argument("--name", help="choose name for split data files")
+    parser.add_argument("--curr", help="choose number of curriculums generated for the data", type=int)
     args = parser.parse_args()
 
     df = pd.read_csv(f'data/pykin/{args.file}.csv')
@@ -49,25 +54,44 @@ if __name__ == '__main__':
     else:
         data_stats['norm'] = 'none'
 
-    x = df[x_cols].to_numpy()
-    y = df[y_cols].to_numpy()
+    # Generate curriculums
+    file_path = 'urdf/tiago/tiago.urdf'
+    robot = SingleArm(file_path, Transform(rot=[0.0, 0.0, 0.0], pos=[0, 0, 0]))
+    thetas = [0, 0, 0, 0, 0, 0, 0]
+    shoulder = robot.forward_kin(thetas)['arm_1_link'].pos
 
-    # Split and save
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+    df['distance'] = np.sqrt(np.square(df['ee_x'] - shoulder[0]) + np.square(df['ee_y'] - shoulder[1]) + np.square(df['ee_z'] - shoulder[2]))
+    bounds = np.linspace(min(df['distance']), max(df['distance']), args.curr + 1)
 
-    with open(f'data/pykin/x_train_{args.name}.npy', 'wb') as f:
-        np.save(f, x_train)
+    if os.path.exists(f'data/pykin/{args.name}'):
+        shutil.rmtree(f'data/pykin/{args.name}')
+    os.makedirs(f'data/pykin/{args.name}')
 
-    with open(f'data/pykin/y_train_{args.name}.npy', 'wb') as f:
-        np.save(f, y_train)
+    curr_sizes = []
+    for i in range(args.curr):
+        df_curr = df[df['distance'].between(bounds[i], bounds[i+1])]
+        curr_sizes.append(df_curr.shape[0])
 
-    with open(f'data/pykin/x_test_{args.name}.npy', 'wb') as f:
-        np.save(f, x_test)
+        x = df_curr[x_cols].to_numpy()
+        y = df_curr[y_cols].to_numpy()
 
-    with open(f'data/pykin/y_test_{args.name}.npy', 'wb') as f:
-        np.save(f, y_test)
+        # Split and save
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
 
-    with open(f'data/pykin/data_{args.name}.yaml', 'w') as f:
+        with open(f'data/pykin/{args.name}/x_train_curr{i+1}.npy', 'wb') as f:
+            np.save(f, x_train)
+
+        with open(f'data/pykin/{args.name}/y_train_curr{i+1}.npy', 'wb') as f:
+            np.save(f, y_train)
+
+        with open(f'data/pykin/{args.name}/x_test_curr{i+1}.npy', 'wb') as f:
+            np.save(f, x_test)
+
+        with open(f'data/pykin/{args.name}/y_test_curr{i+1}.npy', 'wb') as f:
+            np.save(f, y_test)
+
+    with open(f'data/pykin/{args.name}/data_stats.yaml', 'w') as f:
         yaml.dump(data_stats, f)
 
     print('Done! Files split and saved')
+    print(f'{args.curr} curriculums have been generated, with sizes {curr_sizes}')
