@@ -8,6 +8,7 @@ import tensorflow as tf
 from tensorflow import keras
 
 from tiago_dnn_mlp.simple_mlp_train import SimpleMlp
+from tiago_dnn_cnn.cnn_train import Cnn
 
 
 if __name__ == '__main__':
@@ -17,6 +18,8 @@ if __name__ == '__main__':
 
     if args.name == 'SimpleMlp':
         dnn = SimpleMlp()
+    elif args.name == 'Cnn':
+        dnn = Cnn()
     else:
         raise Exception('model name not recognized')
     
