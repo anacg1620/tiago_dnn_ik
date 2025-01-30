@@ -9,6 +9,8 @@ from tensorflow import keras
 
 from tiago_dnn_mlp.simple_mlp_train import SimpleMlp
 from tiago_dnn_cnn.cnn_train import Cnn
+from tiago_dnn_rnn.simple_rnn_train import SimpleRnn
+from tiago_dnn_rnn.lstm_train import Lstm
 
 
 if __name__ == '__main__':
@@ -20,6 +22,10 @@ if __name__ == '__main__':
         dnn = SimpleMlp()
     elif args.name == 'Cnn':
         dnn = Cnn()
+    elif args.name == 'SimpleRnn':
+        dnn = SimpleRnn()
+    elif args.name == 'Lstm':
+        dnn = Lstm()
     else:
         raise Exception('model name not recognized')
     

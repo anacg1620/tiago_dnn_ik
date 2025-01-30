@@ -1,8 +1,5 @@
-x_train_file: "x_train_mil.npy"
-y_train_file: "y_train_mil.npy"
-x_test_file: "x_test_mil.npy"
-y_test_file: "y_test_mil.npy"
 simple_rnn:
+  data_dir: "pykin/test"
   save: True
   units: 12
   batch_size: 16
@@ -10,6 +7,7 @@ simple_rnn:
   verbose: 1
   lr: 0.01
 lstm:
+  data_dir: "pykin/test"
   save: True
   batch_size: 250
   epochs: 10

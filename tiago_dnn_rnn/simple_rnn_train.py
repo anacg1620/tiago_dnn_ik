@@ -4,70 +4,58 @@
 import yaml
 import numpy as np
 import tensorflow as tf
-import wandb
+import custom_metrics
 
-wandb.init(project='tiago_ik', name='simple_rnn', tensorboard=True)
 
-with open('rnn_config.yaml') as f:
-    config = yaml.safe_load(f)
+class SimpleRnn():
+    def __init__(self): 
+        with open('tiago_dnn_rnn/rnn_config.yaml') as f:
+            self.config = yaml.safe_load(f)['simple_rnn']
 
-x_train = np.load(f"../data/{config['x_train_file']}")
-y_train = np.load(f"../data/{config['y_train_file']}")
-x_test = np.load(f"../data/{config['x_test_file']}")
-y_test = np.load(f"../data/{config['y_test_file']}")
+        x_train = np.load(f"data/{self.config['data_dir']}/x_train_curr1.npy")
+        y_train = np.load(f"data/{self.config['data_dir']}/y_train_curr1.npy")
 
-print("x_train shape :", x_train.shape)
-print("x_test shape :", x_test.shape)
-print("y_train shape :", y_train.shape)
-print("y_test shape :", y_test.shape)
+        # Specify the model's architecture
+        input_size = x_train.shape[1]
+        output_size = y_train.shape[1]
 
-input_size = x_train.shape[1]
-output_size = y_train.shape[1]
+        self.model = tf.keras.models.Sequential([
+            tf.keras.layers.SimpleRNN(self.config['units'], input_shape=(input_size, 1)),
+            tf.keras.layers.Dense(output_size, activation='softmax'),
+        ])
 
-model = tf.keras.models.Sequential([
-    tf.keras.layers.SimpleRNN(config['simple_rnn']['units'], input_shape=(input_size, 1)),
-    tf.keras.layers.Dense(output_size, activation='softmax'),
-])
+        # Specify the loss fuction, optimizer, metrics
+        if input_size == 3:
+            self.model.compile(
+                loss = 'mean_squared_error',
+                optimizer = tf.keras.optimizers.Adam(learning_rate=self.config['lr']),
+                metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error],
+                run_eagerly=True # to access individual elements in loss funct 
+            )
+        elif input_size == 7:
+            self.model.compile(
+                loss = 'mean_squared_error',
+                optimizer = tf.keras.optimizers.Adam(learning_rate=self.config['lr']),
+                metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error, 
+                        custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
+                run_eagerly=True # to access individual elements in loss funct 
+            )
+        elif input_size == 12:
+            self.model.compile(
+                loss = 'mean_squared_error',
+                optimizer = tf.keras.optimizers.Adam(learning_rate=self.config['lr']),
+                metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error,
+                        custom_metrics.rotmatrix_error_1, custom_metrics.rotmatrix_error_2, custom_metrics.rotmatrix_error_3],
+                run_eagerly=True # to access individual elements in loss funct 
+            )
+        else:
+            raise Exception('Data format not recognized')
 
-# Specify the loss fuction, optimizer, metrics
-model.compile(
-    loss = 'mean_squared_error',
-    optimizer = tf.keras.optimizers.Adam(learning_rate=config['simple_rnn']['lr']),
-    metrics = ['mean_squared_error']
-)
+        self.model.summary()
+        tf.keras.utils.plot_model(self.model, 'tiago_dnn_rnn/simple_rnn_model.png', show_shapes=True)
 
-model.summary()
-tf.keras.utils.plot_model(model, 'simple_rnn_model.png', show_shapes=True)
-
-# Train the model
-callbacks_list = [
-    tf.keras.callbacks.TensorBoard (
-        log_dir="logs/simple_rnn"      
-    ),
-    tf.keras.callbacks.EarlyStopping (
-            monitor='val_loss',
-            patience=3,
-    )
-]
-
-history = model.fit(
-    x=x_train,
-    y=y_train,
-    batch_size=config['simple_rnn']['batch_size'],
-    epochs=config['simple_rnn']['epochs'],
-    verbose=config['simple_rnn']['verbose'],
-    callbacks=callbacks_list,
-    validation_data=(x_test, y_test)
-)
-
-# Save model
-if config['simple_rnn']['save']:
-    model.save('simple_rnn.keras')
-    print('Trained model saved to .keras file')
-
-# Predict
-x_pred = x_test[:1]
-print(x_pred)
-y_exp = y_test[:1]
-y_pred = model.predict(x_pred, batch_size=None, verbose="auto", steps=None, callbacks=None)
-print(f'Input {x_pred}, expected output {y_exp}, predicted output {y_pred}')
+    def save(self):
+        # Save model
+        if self.config['simple_rnn']['save']:
+            self.model.save('tiago_dnn_cnn/simple_rnn.keras')
+            print('Trained model saved to .keras file')
