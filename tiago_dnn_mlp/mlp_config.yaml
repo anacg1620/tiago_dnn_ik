@@ -2,8 +2,8 @@ data_dir: "pykin/test"
 simple_mlp:
   save: True
   units: 160
-  batch_size: 16
-  lr: 0.001
+  batch_size: 32
+  lr: 0.01
   epochs: 100
   verbose: 1
   orient_factor: 0.5

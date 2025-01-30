@@ -60,8 +60,12 @@ if __name__ == '__main__':
     thetas = [0, 0, 0, 0, 0, 0, 0]
     shoulder = robot.forward_kin(thetas)['arm_1_link'].pos
 
+    # Equal distance 
     df['distance'] = np.sqrt(np.square(df['ee_x'] - shoulder[0]) + np.square(df['ee_y'] - shoulder[1]) + np.square(df['ee_z'] - shoulder[2]))
     bounds = np.linspace(min(df['distance']), max(df['distance']), args.curr + 1)
+
+    # Equal number of samples
+    bounds = df['distance'].quantile(np.linspace(0, 1, args.curr + 1)).to_list()
 
     if os.path.exists(f'data/pykin/{args.name}'):
         shutil.rmtree(f'data/pykin/{args.name}')
@@ -92,6 +96,7 @@ if __name__ == '__main__':
 
     with open(f'data/pykin/{args.name}/data_stats.yaml', 'w') as f:
         data_stats['curriculums'] = args.curr
+        data_stats['curriculum_sizes'] = curr_sizes
         yaml.dump(data_stats, f)
 
     print('Done! Files split and saved')

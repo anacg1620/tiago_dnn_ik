@@ -55,7 +55,7 @@ Hyperparameter tuning can be performed by running the corresponding script with 
 For example, to run the simple_mlp model training, do:
 ```bash
 cd tiago_dnn_mlp/
-python3 simple_mlp_training.py
+python3 simple_mlp_train.py
 ```
 and select split training and validation files in `mlp_config.yaml`, as well as batch size, learning rate, epochs and other hyperparameters. You can also select if the resulting trained model is saved in a .keras file. 
 
