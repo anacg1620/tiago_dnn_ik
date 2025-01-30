@@ -9,9 +9,6 @@ from pykin.robots.single_arm import SingleArm
 file_path = 'urdf/tiago/tiago.urdf'
 robot = SingleArm(file_path)
 
-with open('mlp_config.yaml') as f:
-    config = yaml.safe_load(f)
-
 orient_true = []
 orient_pred = []
 

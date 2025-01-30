@@ -1,14 +1,15 @@
-data_dir: "pykin/test"
 simple_mlp:
+  data_dir: "pykin/test"
   save: True
   units: 160
-  batch_size: 32
+  batch_size: 64
   lr: 0.01
   epochs: 100
   verbose: 1
   orient_factor: 0.5
   pos_factor: 0.5
 seven_subnet_mlp:
+  data_dir: "pykin/test"
   save: True
   units1: 16
   units2: 272
