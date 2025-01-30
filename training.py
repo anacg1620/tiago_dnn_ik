@@ -7,6 +7,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 
+import custom_metrics
 from tiago_dnn_mlp.simple_mlp_train import SimpleMlp
 from tiago_dnn_cnn.cnn_train import Cnn
 from tiago_dnn_rnn.simple_rnn_train import SimpleRnn
@@ -34,10 +35,37 @@ if __name__ == '__main__':
 
     wandb.init(project='tiago_ik', name=args.name, tensorboard=True, config=dnn.config)
 
+    # Specify the loss fuction, optimizer, metrics
+    if dnn.input_size == 3:
+        dnn.model.compile(
+            loss = 'mean_squared_error',
+            optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+            metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error],
+            run_eagerly=True # to access individual elements in loss funct 
+        )
+    elif dnn.input_size == 7:
+        dnn.model.compile(
+            loss = 'mean_squared_error',
+            optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+            metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error, 
+                    custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
+            run_eagerly=True # to access individual elements in loss funct 
+        )
+    elif dnn.input_size == 12:
+        dnn.model.compile(
+            loss = 'mean_squared_error',
+            optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+            metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error,
+                    custom_metrics.rotmatrix_error_1, custom_metrics.rotmatrix_error_2, custom_metrics.rotmatrix_error_3],
+            run_eagerly=True # to access individual elements in loss funct 
+        )
+    else:
+        raise Exception('Data format not recognized')
+
     # Train the model
     callbacks_list = [
         keras.callbacks.TensorBoard (
-            log_dir="logs/simple_mlp"      
+            log_dir="logs/"      
         ),
         keras.callbacks.EarlyStopping (
                 monitor='val_loss',

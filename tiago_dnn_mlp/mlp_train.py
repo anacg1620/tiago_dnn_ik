@@ -6,7 +6,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers
-import custom_metrics
 
 
 class SevenSubnetMlp():
@@ -17,7 +16,7 @@ class SevenSubnetMlp():
         x_train = np.load(f"data/{self.config['x_train_file']}")
         y_train = np.load(f"data/{self.config['y_train_file']}")
 
-        input_size = x_train.shape[1]
+        self.input_size = x_train.shape[1]
 
         inputX = keras.Input(shape=(1,), name="Xcoor")
         inputY = keras.Input(shape=(1,), name="Ycoor")
@@ -59,33 +58,6 @@ class SevenSubnetMlp():
         output7 = layers.Dense(1, activation = "linear", name="q7")(layer7)
 
         self.model = keras.Model(inputs=[inputX, inputY, inputZ], outputs=[output1, output2, output3, output4, output5, output6, output7], name="ConcatMLP")
-
-        # Specify the loss fuction, optimizer, metrics
-        if input_size == 3:
-            self.model.compile(
-                loss = 'mean_squared_error',
-                optimizer = tf.keras.optimizers.Adam(learning_rate=self.config['lr']),
-                metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error],
-                run_eagerly=True # to access individual elements in loss funct 
-            )
-        elif input_size == 7:
-            self.model.compile(
-                loss = 'mean_squared_error',
-                optimizer = tf.keras.optimizers.Adam(learning_rate=self.config['lr']),
-                metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error, 
-                        custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
-                run_eagerly=True # to access individual elements in loss funct 
-            )
-        elif input_size == 12:
-            self.model.compile(
-                loss = 'mean_squared_error',
-                optimizer = tf.keras.optimizers.Adam(learning_rate=self.config['lr']),
-                metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error,
-                        custom_metrics.rotmatrix_error_1, custom_metrics.rotmatrix_error_2, custom_metrics.rotmatrix_error_3],
-                run_eagerly=True # to access individual elements in loss funct 
-            )
-        else:
-            raise Exception('Data format not recognized')
         
         self.model.summary()
         keras.utils.plot_model(self.model, 'tiago_dnn_mlp/concat_mlp_model.png', show_shapes=True)
