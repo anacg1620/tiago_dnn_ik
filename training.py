@@ -81,6 +81,17 @@ if __name__ == '__main__':
             custom_metrics.PositionError(validation_data=(x_test, y_test))
         ]
 
+        if dnn.input_size == 7:
+            callbacks_list.append([custom_metrics.QuaternionError1(validation_data=(x_test, y_test)),
+                                   custom_metrics.QuaternionError2(validation_data=(x_test, y_test)),
+                                   custom_metrics.QuaternionError3(validation_data=(x_test, y_test))])
+            
+        elif dnn.input_size == 12:
+            callbacks_list.append([custom_metrics.RotMatrixError1(validation_data=(x_test, y_test)),
+                                   custom_metrics.RotMatrixError2(validation_data=(x_test, y_test)),
+                                   custom_metrics.RotMatrixError3(validation_data=(x_test, y_test)),
+                                   custom_metrics.RotMatrixError4(validation_data=(x_test, y_test))])
+
         history.append(dnn.model.fit(
             x=x_train,
             y=y_train,

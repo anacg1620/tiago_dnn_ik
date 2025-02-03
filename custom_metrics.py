@@ -184,3 +184,95 @@ def rotmatrix_error_4(y_true, y_pred):
     dif = np.identity(3) - rot
 
     return np.linalg.norm(dif, ord='fro', axis=(1, 2))
+
+
+class RotMatrixError1(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.rotmatrix_error1 = []
+
+    def eval_map(self):
+        global orient_true
+        global orient_pred
+        x_true, y_true = self.validation_data
+        y_pred = self.model.predict(x_true)
+        orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
+        orient_true = np.array(x_true)[:, 3:].reshape((3000, 3, 3))
+
+        rot = np.einsum('fij,fjk->fik', orient_true, np.transpose(orient_pred, axes=(0, 2, 1)))
+        ret = np.arccos((rot.trace(axis1=1, axis2=2) - 1) / 2)
+        ret[np.isnan(ret)] = 0
+
+        return np.mean(ret)
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Rotation Matrix error 1 for epoch %d is %f"%(epoch, score))
+        wandb.log({'rotmatrix-error-1': score})
+        self.rotmatrix_error1.append(score)
+
+
+class RotMatrixError2(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.rotmatrix_error2 = []
+
+    def eval_map(self):
+        global orient_true
+        global orient_pred
+
+        ret = np.linalg.norm(orient_true - orient_pred, ord='fro', axis=(1, 2))
+
+        return np.mean(ret)
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Rotation Matrix error 2 for epoch %d is %f"%(epoch, score))
+        wandb.log({'rotmatrix-error-2': score})
+        self.rotmatrix_error2.append(score)
+
+
+class RotMatrixError3(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.rotmatrix_error3 = []
+
+    def eval_map(self):
+        global orient_true
+        global orient_pred
+
+        rot = np.einsum('fij,fjk->fik', np.transpose(orient_true, axes=(0, 2, 1)), orient_pred)
+        angle = np.arccos((rot.trace(axis1=1, axis2=2) - 1) / 2)
+        angle[np.isnan(angle)] = 0
+        # log as in https://lcvmwww.epfl.ch/publications/data/articles/63/Means_and_Averaging_in_the_Group_of_Rotations.pdf page 3
+        rotlog = (angle / (2 * np.sin(angle)))[:, None, None] * (rot - np.transpose(rot, axes=(0, 2, 1)))
+        rotlog[np.isnan(rotlog)] = 0
+
+        return np.mean(1 / np.sqrt(2) * np.linalg.norm(rotlog, ord='fro', axis=(1, 2)))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Rotation Matrix error 3 for epoch %d is %f"%(epoch, score))
+        wandb.log({'rotmatrix-error-3': score})
+        self.rotmatrix_error3.append(score)
+
+
+class RotMatrixError4(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.rotmatrix_error4 = []
+
+    def eval_map(self):
+        global orient_true
+        global orient_pred
+
+        rot = np.einsum('fij,fjk->fik', orient_true, np.transpose(orient_pred, axes=(0, 2, 1)))
+        dif = np.identity(3) - rot
+
+        return np.mean(np.linalg.norm(dif, ord='fro', axis=(1, 2)))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Rotation Matrix error 4 for epoch %d is %f"%(epoch, score))
+        wandb.log({'rotmatrix-error-4': score})
+        self.rotmatrix_error4.append(score)
