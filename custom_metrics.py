@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
-import yaml
+import wandb
 import tensorflow as tf
 import numpy as np
 from pykin.robots.single_arm import SingleArm
+from pykin.kinematics.transform import Transform
 
 
 file_path = 'urdf/tiago/tiago.urdf'
-robot = SingleArm(file_path)
+robot = SingleArm(file_path, Transform(rot=[0.0, 0.0, 0.0], pos=[0, 0, 0]))
 
 orient_true = []
 orient_pred = []
@@ -20,6 +21,25 @@ def position_error(y_true, y_pred):
     fk_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
 
     return np.linalg.norm(fk_true - fk_pred, axis=1)
+
+
+class PositionError(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.maps = []
+
+    def eval_map(self):
+        x_true, y_true = self.validation_data
+        y_pred = self.model.predict(x_true)
+        x_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
+
+        return np.mean(np.linalg.norm(x_true - x_pred, axis=1))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Position error for epoch %d is %f"%(epoch, score))
+        wandb.log({'mean-position-error': score})
+        self.maps.append(score)
 
 
 ########### QUATERNIONS ###########

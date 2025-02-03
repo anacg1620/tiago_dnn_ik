@@ -29,6 +29,6 @@ class SimpleMlp():
 
     def save(self):
         # Save model
-        if self.self.config['save']:
+        if self.config['save']:
             self.model.save('tiago_dnn_mlp/simple_mlp.keras')
             print('Trained model saved to .keras file')

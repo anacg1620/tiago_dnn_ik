@@ -40,8 +40,8 @@ if __name__ == '__main__':
         dnn.model.compile(
             loss = 'mean_squared_error',
             optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-            metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error],
-            run_eagerly=True # to access individual elements in loss funct 
+            metrics = ['accuracy', 'mean_squared_error'],
+            run_eagerly=False # to access individual elements in loss funct 
         )
     elif dnn.input_size == 7:
         dnn.model.compile(
@@ -62,23 +62,24 @@ if __name__ == '__main__':
     else:
         raise Exception('Data format not recognized')
 
-    # Train the model
-    callbacks_list = [
-        keras.callbacks.TensorBoard (
-            log_dir="logs/"      
-        ),
-        keras.callbacks.EarlyStopping (
-                monitor='val_loss',
-                patience=3,
-        )
-    ]
-
     history = []
     for i in range(stats['curriculums']):
         x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr{i+1}.npy")
         y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr{i+1}.npy")
         x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr{i+1}.npy")
         y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr{i+1}.npy")
+
+        # Train the model
+        callbacks_list = [
+            keras.callbacks.TensorBoard (
+                log_dir="logs/"      
+            ),
+            keras.callbacks.EarlyStopping (
+                    monitor='val_loss',
+                    patience=3,
+            ),
+            custom_metrics.PositionError(validation_data=(x_test, y_test))
+        ]
 
         history.append(dnn.model.fit(
             x=x_train,
