@@ -26,12 +26,13 @@ def position_error(y_true, y_pred):
 class PositionError(tf.keras.callbacks.Callback):
     def __init__(self, validation_data):
         self.validation_data = validation_data
-        self.maps = []
+        self.pos_error = []
 
     def eval_map(self):
         x_true, y_true = self.validation_data
         y_pred = self.model.predict(x_true)
         x_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
+        x_true = np.array(x_true)[:, :3]
 
         return np.mean(np.linalg.norm(x_true - x_pred, axis=1))
 
@@ -39,7 +40,7 @@ class PositionError(tf.keras.callbacks.Callback):
         score = self.eval_map()
         print ("Position error for epoch %d is %f"%(epoch, score))
         wandb.log({'mean-position-error': score})
-        self.maps.append(score)
+        self.pos_error.append(score)
 
 
 ########### QUATERNIONS ###########
@@ -72,6 +73,71 @@ def quaternion_error_3(y_true, y_pred):
     prod = np.sum(orient_true * orient_pred, axis=1)
 
     return 1 - np.abs(prod)
+
+
+class QuaternionError1(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.quat_error1 = []
+
+    def eval_map(self):
+        global orient_true
+        global orient_pred
+        x_true, y_true = self.validation_data
+        y_pred = self.model.predict(x_true)
+        orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
+        orient_true = np.array(x_true)[:, 3:]
+
+        dif1 = np.linalg.norm(orient_true - orient_pred, axis=1)
+        dif2 = np.linalg.norm(orient_true + orient_pred, axis=1)
+
+        return np.mean(np.minimum(dif1, dif2))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Quaternion error 1 for epoch %d is %f"%(epoch, score))
+        wandb.log({'quaternion-error-1': score})
+        self.quat_error1.append(score)
+
+
+class QuaternionError2(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.quat_error2 = []
+
+    def eval_map(self):
+        global orient_true
+        global orient_pred
+
+        prod = np.sum(orient_true * orient_pred, axis=1)
+
+        return np.mean(np.arccos(np.abs(prod)))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Quaternion error 2 for epoch %d is %f"%(epoch, score))
+        wandb.log({'quaternion-error-2': score})
+        self.quat_error2.append(score)
+
+
+class QuaternionError3(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data):
+        self.validation_data = validation_data
+        self.quat_error3 = []
+
+    def eval_map(self):
+        global orient_true
+        global orient_pred
+
+        prod = np.sum(orient_true * orient_pred, axis=1)
+
+        return np.mean(1 - np.abs(prod))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        print ("Quaternion error 3 for epoch %d is %f"%(epoch, score))
+        wandb.log({'quaternion-error-3': score})
+        self.quat_error3.append(score)
 
 
 ########### ROTATION MATRIX ###########
