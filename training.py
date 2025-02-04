@@ -40,23 +40,23 @@ if __name__ == '__main__':
         dnn.model.compile(
             loss = 'mean_squared_error',
             optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-            metrics = ['accuracy', 'mean_squared_error'],
-            run_eagerly=False # to access individual elements in loss funct 
+            metrics = ['accuracy', 'mean_squared_error'], # , custom_metrics.position_error],
+            run_eagerly=True # to access individual elements in loss funct 
         )
     elif dnn.input_size == 7:
         dnn.model.compile(
             loss = 'mean_squared_error',
             optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-            metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error, 
-                    custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
+            metrics = ['accuracy', 'mean_squared_error'], #, custom_metrics.position_error, 
+                    # custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
             run_eagerly=True # to access individual elements in loss funct 
         )
     elif dnn.input_size == 12:
         dnn.model.compile(
             loss = 'mean_squared_error',
             optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-            metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error,
-                    custom_metrics.rotmatrix_error_1, custom_metrics.rotmatrix_error_2, custom_metrics.rotmatrix_error_3],
+            metrics = ['accuracy', 'mean_squared_error'], #, custom_metrics.position_error,
+                    # custom_metrics.rotmatrix_error_1, custom_metrics.rotmatrix_error_2, custom_metrics.rotmatrix_error_3],
             run_eagerly=True # to access individual elements in loss funct 
         )
     else:
@@ -78,16 +78,16 @@ if __name__ == '__main__':
                     monitor='val_loss',
                     patience=3,
             ),
-            custom_metrics.PositionError(validation_data=(x_test, y_test))
+            custom_metrics.PositionError(validation_data=(x_test, y_test), stats=stats)
         ]
 
         if dnn.input_size == 7:
-            callbacks_list.append([custom_metrics.QuaternionError1(validation_data=(x_test, y_test)),
+            callbacks_list.append([custom_metrics.QuaternionError1(validation_data=(x_test, y_test), stats=stats),
                                    custom_metrics.QuaternionError2(validation_data=(x_test, y_test)),
                                    custom_metrics.QuaternionError3(validation_data=(x_test, y_test))])
             
         elif dnn.input_size == 12:
-            callbacks_list.append([custom_metrics.RotMatrixError1(validation_data=(x_test, y_test)),
+            callbacks_list.append([custom_metrics.RotMatrixError1(validation_data=(x_test, y_test), stats=stats),
                                    custom_metrics.RotMatrixError2(validation_data=(x_test, y_test)),
                                    custom_metrics.RotMatrixError3(validation_data=(x_test, y_test)),
                                    custom_metrics.RotMatrixError4(validation_data=(x_test, y_test))])

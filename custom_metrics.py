@@ -24,15 +24,25 @@ def position_error(y_true, y_pred):
 
 
 class PositionError(tf.keras.callbacks.Callback):
-    def __init__(self, validation_data):
+    def __init__(self, validation_data, stats):
         self.validation_data = validation_data
+        self.stats = stats
         self.pos_error = []
 
     def eval_map(self):
         x_true, y_true = self.validation_data
         y_pred = self.model.predict(x_true)
-        x_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
         x_true = np.array(x_true)[:, :3]
+
+        # De-standardization or de-normalization of inputs
+        if 'std' == self.stats['norm']:
+            x_true = x_true * np.array(self.stats['df_std_in'])[:3] + np.array(self.stats['df_mean_in'])[:3]
+            y_pred = y_pred * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+        elif 'norm' == self.stats['norm']:
+            x_true = x_true * (np.array(self.stats['df_max_in'])[:3] - np.array(self.stats['df_min_in'])[:3]) + np.array(self.stats['df_min_in'])[:3]
+            y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+
+        x_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
 
         return np.mean(np.linalg.norm(x_true - x_pred, axis=1))
 
@@ -76,8 +86,9 @@ def quaternion_error_3(y_true, y_pred):
 
 
 class QuaternionError1(tf.keras.callbacks.Callback):
-    def __init__(self, validation_data):
+    def __init__(self, validation_data, stats):
         self.validation_data = validation_data
+        self.stats = stats
         self.quat_error1 = []
 
     def eval_map(self):
@@ -85,9 +96,17 @@ class QuaternionError1(tf.keras.callbacks.Callback):
         global orient_pred
         x_true, y_true = self.validation_data
         y_pred = self.model.predict(x_true)
-        orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
         orient_true = np.array(x_true)[:, 3:]
 
+        # De-standardization or de-normalization of inputs
+        if 'std' == self.stats['norm']:
+            orient_true = orient_true * np.array(self.stats['df_std_in'])[3:] + np.array(self.stats['df_mean_in'])[3:]
+            y_pred = y_pred * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+        elif 'norm' == self.stats['norm']:
+            orient_true = orient_true * (np.array(self.stats['df_max_in'])[3:] - np.array(self.stats['df_min_in'])[3:]) + np.array(self.stats['df_min_in'])[3:]
+            y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+
+        orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
         dif1 = np.linalg.norm(orient_true - orient_pred, axis=1)
         dif2 = np.linalg.norm(orient_true + orient_pred, axis=1)
 
@@ -187,8 +206,9 @@ def rotmatrix_error_4(y_true, y_pred):
 
 
 class RotMatrixError1(tf.keras.callbacks.Callback):
-    def __init__(self, validation_data):
+    def __init__(self, validation_data, stats):
         self.validation_data = validation_data
+        self.stats = stats
         self.rotmatrix_error1 = []
 
     def eval_map(self):
@@ -196,8 +216,18 @@ class RotMatrixError1(tf.keras.callbacks.Callback):
         global orient_pred
         x_true, y_true = self.validation_data
         y_pred = self.model.predict(x_true)
+        orient_true = np.array(x_true)[:, 3:]
+
+        # De-standardization or de-normalization of inputs
+        if 'std' == self.stats['norm']:
+            orient_true = orient_true * np.array(self.stats['df_std_in'])[3:] + np.array(self.stats['df_mean_in'])[3:]
+            y_pred = y_pred * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+        elif 'norm' == self.stats['norm']:
+            orient_true = orient_true * (np.array(self.stats['df_max_in'])[3:] - np.array(self.stats['df_min_in'])[3:]) + np.array(self.stats['df_min_in'])[3:]
+            y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+
         orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
-        orient_true = np.array(x_true)[:, 3:].reshape((3000, 3, 3))
+        orient_true = orient_true.reshape((x_true.shape[0], 3, 3))
 
         rot = np.einsum('fij,fjk->fik', orient_true, np.transpose(orient_pred, axes=(0, 2, 1)))
         ret = np.arccos((rot.trace(axis1=1, axis2=2) - 1) / 2)
