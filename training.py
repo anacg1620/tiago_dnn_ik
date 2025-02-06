@@ -3,6 +3,7 @@
 import yaml
 import wandb
 import argparse
+import random
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -12,6 +13,28 @@ from tiago_dnn_mlp.simple_mlp_train import SimpleMlp
 from tiago_dnn_cnn.cnn_train import Cnn
 from tiago_dnn_rnn.simple_rnn_train import SimpleRnn
 from tiago_dnn_rnn.lstm_train import Lstm
+
+
+def generator(input, output, batch_size):
+    batch_x = np.zeros((batch_size, input.shape[1]))
+    batch_y = np.zeros((batch_size, output.shape[1]))
+
+    for i in range(batch_size):
+        pos = []
+        for joint in joint_names:
+            pos.append(random.uniform(limits[joint]['lower'], limits[joint]['upper']))
+
+        fk = robot.forward_kin(pos)
+        shoulder_pos = fk['arm_1_link']
+        fk = fk['tiago_link_ee']
+
+        if fk.pos[2] > 0.3 and np.linalg.norm(shoulder_pos.pos - fk.pos) < 0.8:
+            # choose random index in features
+            index = random.randint(0, input.shape[0])
+            batch_x[i] = input[index]
+            batch_y[i] = output[index]
+
+    yield batch_x, batch_y
 
 
 if __name__ == '__main__':
@@ -33,34 +56,15 @@ if __name__ == '__main__':
     with open(f"data/{dnn.config['data_dir']}/data_stats.yaml") as f:
         stats = yaml.safe_load(f)
 
-    wandb.init(project='tiago_ik', name=args.name, tensorboard=True, config=dnn.config)
+    # wandb.init(project='tiago_ik', name=args.name, tensorboard=True, config=dnn.config)
 
     # Specify the loss fuction, optimizer, metrics
-    if dnn.input_size == 3:
-        dnn.model.compile(
-            loss = 'mean_squared_error',
-            optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-            metrics = ['accuracy', 'mean_squared_error'], # , custom_metrics.position_error],
-            run_eagerly=True # to access individual elements in loss funct 
-        )
-    elif dnn.input_size == 7:
-        dnn.model.compile(
-            loss = 'mean_squared_error',
-            optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-            metrics = ['accuracy', 'mean_squared_error'], #, custom_metrics.position_error, 
-                    # custom_metrics.quaternion_error_1, custom_metrics.quaternion_error_2, custom_metrics.quaternion_error_3],
-            run_eagerly=True # to access individual elements in loss funct 
-        )
-    elif dnn.input_size == 12:
-        dnn.model.compile(
-            loss = 'mean_squared_error',
-            optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-            metrics = ['accuracy', 'mean_squared_error'], #, custom_metrics.position_error,
-                    # custom_metrics.rotmatrix_error_1, custom_metrics.rotmatrix_error_2, custom_metrics.rotmatrix_error_3],
-            run_eagerly=True # to access individual elements in loss funct 
-        )
-    else:
-        raise Exception('Data format not recognized')
+    dnn.model.compile(
+        loss = 'mean_squared_error',
+        optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+        metrics = ['accuracy', 'mean_squared_error'],
+        run_eagerly=True # to access individual elements in loss funct 
+    )
 
     history = []
     for i in range(stats['curriculums']):
@@ -92,10 +96,8 @@ if __name__ == '__main__':
                                    custom_metrics.RotMatrixError3(validation_data=(x_test, y_test)),
                                    custom_metrics.RotMatrixError4(validation_data=(x_test, y_test))])
 
-        history.append(dnn.model.fit(
-            x=x_train,
-            y=y_train,
-            batch_size=dnn.config['batch_size'],
+        history.append(dnn.model.fit_generator(
+            generator(x_train, y_train, dnn.config['batch_size']),
             epochs=dnn.config['epochs'],
             verbose=dnn.config['verbose'],
             callbacks=callbacks_list,
