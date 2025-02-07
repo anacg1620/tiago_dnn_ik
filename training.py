@@ -2,6 +2,7 @@
 
 import yaml
 import wandb
+import math
 import argparse
 import random
 import numpy as np
@@ -15,26 +16,45 @@ from tiago_dnn_rnn.simple_rnn_train import SimpleRnn
 from tiago_dnn_rnn.lstm_train import Lstm
 
 
-def generator(input, output, batch_size):
-    batch_x = np.zeros((batch_size, input.shape[1]))
-    batch_y = np.zeros((batch_size, output.shape[1]))
+current_curr = 1
 
-    for i in range(batch_size):
-        pos = []
-        for joint in joint_names:
-            pos.append(random.uniform(limits[joint]['lower'], limits[joint]['upper']))
+def train_generator(curriculums, batch_size):
+    global current_curr
 
-        fk = robot.forward_kin(pos)
-        shoulder_pos = fk['arm_1_link']
-        fk = fk['tiago_link_ee']
+    for curr in range(curriculums):
+        current_curr = curr
+        x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr{curr+1}.npy")
+        y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr{curr+1}.npy")
 
-        if fk.pos[2] > 0.3 and np.linalg.norm(shoulder_pos.pos - fk.pos) < 0.8:
+        batch_x = np.zeros((batch_size, x_train.shape[1]))
+        batch_y = np.zeros((batch_size, y_train.shape[1]))
+
+        for times in range(math.floor(x_train.shape[0] / batch_size)):
+            for i in range(batch_size):
+                # choose random index in features
+                index = random.randint(0, x_train.shape[0]-1)
+                batch_x[i] = x_train[index]
+                batch_y[i] = y_train[index]
+
+            yield batch_x, batch_y
+
+
+def val_generator(batch_size):
+    global current_curr
+    x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr{current_curr+1}.npy")
+    y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr{current_curr+1}.npy")
+
+    batch_x = np.zeros((batch_size, x_test.shape[1]))
+    batch_y = np.zeros((batch_size, y_test.shape[1]))
+
+    for times in range(math.floor(x_test.shape[0] / batch_size)):
+        for i in range(batch_size):
             # choose random index in features
-            index = random.randint(0, input.shape[0])
-            batch_x[i] = input[index]
-            batch_y[i] = output[index]
+            index = random.randint(0, x_test.shape[0]-1)
+            batch_x[i] = x_test[index]
+            batch_y[i] = y_test[index]
 
-    yield batch_x, batch_y
+        yield batch_x, batch_y
 
 
 if __name__ == '__main__':
@@ -66,42 +86,37 @@ if __name__ == '__main__':
         run_eagerly=True # to access individual elements in loss funct 
     )
 
-    history = []
-    for i in range(stats['curriculums']):
-        x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr{i+1}.npy")
-        y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr{i+1}.npy")
-        x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr{i+1}.npy")
-        y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr{i+1}.npy")
+    # Train the model
+    callbacks_list = [
+        keras.callbacks.TensorBoard (
+            log_dir="logs/"      
+        ),
+        keras.callbacks.EarlyStopping (
+                monitor='val_loss',
+                patience=3,
+        ),
+        custom_metrics.PositionError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
+    ]
 
-        # Train the model
-        callbacks_list = [
-            keras.callbacks.TensorBoard (
-                log_dir="logs/"      
-            ),
-            keras.callbacks.EarlyStopping (
-                    monitor='val_loss',
-                    patience=3,
-            ),
-            custom_metrics.PositionError(validation_data=(x_test, y_test), stats=stats)
-        ]
+    if dnn.input_size == 7:
+        callbacks_list.append([custom_metrics.QuaternionError1(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
+                                custom_metrics.QuaternionError2(validation_data=val_generator(dnn.config['batch_size'])),
+                                custom_metrics.QuaternionError3(validation_data=val_generator(dnn.config['batch_size']))])
+        
+    elif dnn.input_size == 12:
+        callbacks_list.append([custom_metrics.RotMatrixError1(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
+                                custom_metrics.RotMatrixError2(validation_data=val_generator(dnn.config['batch_size'])),
+                                custom_metrics.RotMatrixError3(validation_data=val_generator(dnn.config['batch_size'])),
+                                custom_metrics.RotMatrixError4(validation_data=val_generator(dnn.config['batch_size']))])
 
-        if dnn.input_size == 7:
-            callbacks_list.append([custom_metrics.QuaternionError1(validation_data=(x_test, y_test), stats=stats),
-                                   custom_metrics.QuaternionError2(validation_data=(x_test, y_test)),
-                                   custom_metrics.QuaternionError3(validation_data=(x_test, y_test))])
-            
-        elif dnn.input_size == 12:
-            callbacks_list.append([custom_metrics.RotMatrixError1(validation_data=(x_test, y_test), stats=stats),
-                                   custom_metrics.RotMatrixError2(validation_data=(x_test, y_test)),
-                                   custom_metrics.RotMatrixError3(validation_data=(x_test, y_test)),
-                                   custom_metrics.RotMatrixError4(validation_data=(x_test, y_test))])
-
-        history.append(dnn.model.fit_generator(
-            generator(x_train, y_train, dnn.config['batch_size']),
-            epochs=dnn.config['epochs'],
-            verbose=dnn.config['verbose'],
-            callbacks=callbacks_list,
-            validation_data=(x_test, y_test)
-        ))
+    history = dnn.model.fit_generator(
+        generator=train_generator(stats['curriculums'], dnn.config['batch_size']),
+        steps_per_epoch=dnn.config['steps_per_epoch'],
+        epochs=dnn.config['epochs'],
+        verbose=dnn.config['verbose'],
+        callbacks=callbacks_list,
+        validation_data=val_generator(dnn.config['batch_size']),
+        validation_steps=dnn.config['validation_steps'],
+    )
 
     dnn.save()
