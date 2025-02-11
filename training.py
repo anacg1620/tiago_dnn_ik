@@ -21,10 +21,9 @@ current_curr = 1
 def train_generator(curriculums, batch_size):
     global current_curr
 
-    for curr in range(curriculums):
-        current_curr = curr
-        x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr{curr+1}.npy")
-        y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr{curr+1}.npy")
+    while True:
+        x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr{current_curr}.npy")
+        y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr{current_curr}.npy")
 
         batch_x = np.zeros((batch_size, x_train.shape[1]))
         batch_y = np.zeros((batch_size, y_train.shape[1]))
@@ -38,23 +37,28 @@ def train_generator(curriculums, batch_size):
 
             yield batch_x, batch_y
 
+        if current_curr < curriculums:
+            current_curr += 1
+
 
 def val_generator(batch_size):
     global current_curr
-    x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr{current_curr+1}.npy")
-    y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr{current_curr+1}.npy")
 
-    batch_x = np.zeros((batch_size, x_test.shape[1]))
-    batch_y = np.zeros((batch_size, y_test.shape[1]))
+    while True:
+        x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr{current_curr}.npy")
+        y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr{current_curr}.npy")
 
-    for times in range(math.floor(x_test.shape[0] / batch_size)):
-        for i in range(batch_size):
-            # choose random index in features
-            index = random.randint(0, x_test.shape[0]-1)
-            batch_x[i] = x_test[index]
-            batch_y[i] = y_test[index]
+        batch_x = np.zeros((batch_size, x_test.shape[1]))
+        batch_y = np.zeros((batch_size, y_test.shape[1]))
 
-        yield batch_x, batch_y
+        for times in range(math.floor(x_test.shape[0] / batch_size)):
+            for i in range(batch_size):
+                # choose random index in features
+                index = random.randint(0, x_test.shape[0]-1)
+                batch_x[i] = x_test[index]
+                batch_y[i] = y_test[index]
+
+            yield batch_x, batch_y
 
 
 if __name__ == '__main__':
@@ -76,7 +80,7 @@ if __name__ == '__main__':
     with open(f"data/{dnn.config['data_dir']}/data_stats.yaml") as f:
         stats = yaml.safe_load(f)
 
-    # wandb.init(project='tiago_ik', name=args.name, tensorboard=True, config=dnn.config)
+    wandb.init(project='tiago_ik', name=args.name, tensorboard=True, config=dnn.config)
 
     # Specify the loss fuction, optimizer, metrics
     dnn.model.compile(
@@ -91,10 +95,10 @@ if __name__ == '__main__':
         keras.callbacks.TensorBoard (
             log_dir="logs/"      
         ),
-        keras.callbacks.EarlyStopping (
-                monitor='val_loss',
-                patience=3,
-        ),
+        # keras.callbacks.EarlyStopping (
+        #         monitor='val_loss',
+        #         patience=3,
+        # ),
         custom_metrics.PositionError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
     ]
 
@@ -109,14 +113,14 @@ if __name__ == '__main__':
                                 custom_metrics.RotMatrixError3(validation_data=val_generator(dnn.config['batch_size'])),
                                 custom_metrics.RotMatrixError4(validation_data=val_generator(dnn.config['batch_size']))])
 
-    history = dnn.model.fit_generator(
-        generator=train_generator(stats['curriculums'], dnn.config['batch_size']),
-        steps_per_epoch=dnn.config['steps_per_epoch'],
+    history = dnn.model.fit(
+        train_generator(stats['curriculums'], dnn.config['batch_size']),
+        steps_per_epoch=(dnn.config['steps_per_epoch'] // dnn.config['batch_size']),
         epochs=dnn.config['epochs'],
         verbose=dnn.config['verbose'],
         callbacks=callbacks_list,
         validation_data=val_generator(dnn.config['batch_size']),
-        validation_steps=dnn.config['validation_steps'],
+        validation_steps=(dnn.config['validation_steps'] // dnn.config['batch_size'])
     )
 
     dnn.save()

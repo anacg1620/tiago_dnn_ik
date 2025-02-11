@@ -49,7 +49,7 @@ class PositionError(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Position error for epoch %d is %f"%(epoch, score))
-        # wandb.log({'mean-position-error': score})
+        wandb.log({'mean-position-error': score})
         self.pos_error.append(score)
 
 
@@ -115,7 +115,7 @@ class QuaternionError1(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Quaternion error 1 for epoch %d is %f"%(epoch, score))
-        # wandb.log({'quaternion-error-1': score})
+        wandb.log({'quaternion-error-1': score})
         self.quat_error1.append(score)
 
 
@@ -135,7 +135,7 @@ class QuaternionError2(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Quaternion error 2 for epoch %d is %f"%(epoch, score))
-        # wandb.log({'quaternion-error-2': score})
+        wandb.log({'quaternion-error-2': score})
         self.quat_error2.append(score)
 
 
@@ -155,7 +155,7 @@ class QuaternionError3(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Quaternion error 3 for epoch %d is %f"%(epoch, score))
-        # wandb.log({'quaternion-error-3': score})
+        wandb.log({'quaternion-error-3': score})
         self.quat_error3.append(score)
 
 
@@ -238,7 +238,7 @@ class RotMatrixError1(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Rotation Matrix error 1 for epoch %d is %f"%(epoch, score))
-        # wandb.log({'rotmatrix-error-1': score})
+        wandb.log({'rotmatrix-error-1': score})
         self.rotmatrix_error1.append(score)
 
 
@@ -258,7 +258,7 @@ class RotMatrixError2(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Rotation Matrix error 2 for epoch %d is %f"%(epoch, score))
-        # wandb.log({'rotmatrix-error-2': score})
+        wandb.log({'rotmatrix-error-2': score})
         self.rotmatrix_error2.append(score)
 
 
@@ -283,7 +283,7 @@ class RotMatrixError3(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Rotation Matrix error 3 for epoch %d is %f"%(epoch, score))
-        # wandb.log({'rotmatrix-error-3': score})
+        wandb.log({'rotmatrix-error-3': score})
         self.rotmatrix_error3.append(score)
 
 
@@ -304,5 +304,5 @@ class RotMatrixError4(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         score = self.eval_map()
         # print ("Rotation Matrix error 4 for epoch %d is %f"%(epoch, score))
-        # wandb.log({'rotmatrix-error-4': score})
+        wandb.log({'rotmatrix-error-4': score})
         self.rotmatrix_error4.append(score)
