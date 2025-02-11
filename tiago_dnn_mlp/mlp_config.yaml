@@ -3,10 +3,9 @@ simple_mlp:
   save: True
   units: 160
   batch_size: 32
-  steps_per_epoch: 2048
-  validation_steps: 2048
-  lr: 0.01
-  epochs: 100
+  epochs_to_change: [50, 150, 300]
+  lr: 0.001
+  epochs: 300
   verbose: 1
   orient_factor: 0.5
   pos_factor: 0.5

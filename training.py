@@ -18,6 +18,20 @@ from tiago_dnn_rnn.lstm_train import Lstm
 
 current_curr = 1
 
+class UpdateCurriculum(tf.keras.callbacks.Callback):
+    def __init__(self, epochs_to_change, total_currs):
+        self.epochs_to_change = epochs_to_change
+        self.total_currs = total_currs
+        self.pos_error = []
+
+    def on_epoch_end(self, epoch, logs={}):
+        global current_curr
+
+        if (epoch + 1) == self.epochs_to_change[current_curr-1] and current_curr < self.total_currs:
+            current_curr += 1
+            print(f'\n\n--- Change to curriculum {current_curr} ---\n')
+
+
 def train_generator(curriculums, batch_size):
     global current_curr
 
@@ -28,17 +42,13 @@ def train_generator(curriculums, batch_size):
         batch_x = np.zeros((batch_size, x_train.shape[1]))
         batch_y = np.zeros((batch_size, y_train.shape[1]))
 
-        for times in range(math.floor(x_train.shape[0] / batch_size)):
-            for i in range(batch_size):
-                # choose random index in features
-                index = random.randint(0, x_train.shape[0]-1)
-                batch_x[i] = x_train[index]
-                batch_y[i] = y_train[index]
+        for i in range(batch_size):
+            # choose random index in features
+            index = random.randint(0, x_train.shape[0]-1)
+            batch_x[i] = x_train[index]
+            batch_y[i] = y_train[index]
 
-            yield batch_x, batch_y
-
-        if current_curr < curriculums:
-            current_curr += 1
+        yield batch_x, batch_y
 
 
 def val_generator(batch_size):
@@ -51,14 +61,13 @@ def val_generator(batch_size):
         batch_x = np.zeros((batch_size, x_test.shape[1]))
         batch_y = np.zeros((batch_size, y_test.shape[1]))
 
-        for times in range(math.floor(x_test.shape[0] / batch_size)):
-            for i in range(batch_size):
-                # choose random index in features
-                index = random.randint(0, x_test.shape[0]-1)
-                batch_x[i] = x_test[index]
-                batch_y[i] = y_test[index]
+        for i in range(batch_size):
+            # choose random index in features
+            index = random.randint(0, x_test.shape[0]-1)
+            batch_x[i] = x_test[index]
+            batch_y[i] = y_test[index]
 
-            yield batch_x, batch_y
+        yield batch_x, batch_y
 
 
 if __name__ == '__main__':
@@ -90,6 +99,9 @@ if __name__ == '__main__':
         run_eagerly=True # to access individual elements in loss funct 
     )
 
+    if len(dnn.config['epochs_to_change']) != stats['curriculums']:
+        raise Exception('length of epochs_to_change must be equal to the number of curriculums. Modify yaml')
+
     # Train the model
     callbacks_list = [
         keras.callbacks.TensorBoard (
@@ -99,6 +111,7 @@ if __name__ == '__main__':
         #         monitor='val_loss',
         #         patience=3,
         # ),
+        UpdateCurriculum(epochs_to_change=dnn.config['epochs_to_change'], total_currs=stats['curriculums']),
         custom_metrics.PositionError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
     ]
 
@@ -115,12 +128,12 @@ if __name__ == '__main__':
 
     history = dnn.model.fit(
         train_generator(stats['curriculums'], dnn.config['batch_size']),
-        steps_per_epoch=(dnn.config['steps_per_epoch'] // dnn.config['batch_size']),
+        steps_per_epoch=((stats['curriculum_sizes'][0] * (1-stats['test_size'])) // dnn.config['batch_size']),
         epochs=dnn.config['epochs'],
         verbose=dnn.config['verbose'],
         callbacks=callbacks_list,
         validation_data=val_generator(dnn.config['batch_size']),
-        validation_steps=(dnn.config['validation_steps'] // dnn.config['batch_size'])
+        validation_steps=((stats['curriculum_sizes'][0] * stats['test_size']) // dnn.config['batch_size'])
     )
 
     dnn.save()

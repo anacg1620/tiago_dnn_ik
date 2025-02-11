@@ -80,7 +80,8 @@ if __name__ == '__main__':
         y = df_curr[y_cols].to_numpy()
 
         # Split and save
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3)
+        test_size = 0.3
+        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size)
 
         with open(f'data/pykin/{args.name}/x_train_curr{i+1}.npy', 'wb') as f:
             np.save(f, x_train)
@@ -95,6 +96,7 @@ if __name__ == '__main__':
             np.save(f, y_test)
 
     with open(f'data/pykin/{args.name}/data_stats.yaml', 'w') as f:
+        data_stats['test_size'] = test_size
         data_stats['curriculums'] = args.curr
         data_stats['curriculum_sizes'] = curr_sizes
         yaml.dump(data_stats, f)
