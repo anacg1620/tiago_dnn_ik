@@ -22,14 +22,24 @@ class UpdateCurriculum(tf.keras.callbacks.Callback):
     def __init__(self, epochs_to_change, total_currs):
         self.epochs_to_change = epochs_to_change
         self.total_currs = total_currs
-        self.pos_error = []
+        self.last_last_loss = 0
+        self.last_loss = 0
 
     def on_epoch_end(self, epoch, logs={}):
         global current_curr
+        earlystop = (self.last_last_loss == self.last_loss) and (self.last_loss == logs['val_loss'])
+        changeepoch = ((epoch + 1) == self.epochs_to_change[current_curr-1])
 
-        if (epoch + 1) == self.epochs_to_change[current_curr-1] and current_curr < self.total_currs:
-            current_curr += 1
-            print(f'\n\n--- Change to curriculum {current_curr} ---\n')
+        if (earlystop or changeepoch):
+            if current_curr < self.total_currs:
+                current_curr += 1
+                print(f'\n\n--- Change to curriculum {current_curr} ---\n')
+            else:
+                print('Trained on all curriculums. Stopping...')
+                self.model.stop_training = True
+
+        self.last_last_loss = self.last_loss
+        self.last_loss = logs['val_loss']
 
 
 def train_generator(curriculums, batch_size):
