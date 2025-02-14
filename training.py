@@ -17,21 +17,21 @@ from tiago_dnn_rnn.lstm_train import Lstm
 
 current_curr = 1
 
-class UpdateRLCurriculumOnPlateau(tf.keras.callbacks.Callback):
+class UpdateLRCurriculumOnPlateau(tf.keras.callbacks.Callback):
     def __init__(self, monitor="val_loss", factor=0.1, patience=10, verbose=0, mode="auto", 
-                 min_delta=1e-4, cooldown=0, min_lr=0.0, total_currs=1, **kwargs):
+                 min_delta=1e-4, cooldown=0, min_lr=0.0, max_lr=0.1, total_currs=1, thres=0.16, **kwargs):
         super().__init__()
 
         self.monitor = monitor
         if factor >= 1.0:
-            raise ValueError(
-                "ReduceLROnPlateau does not support a factor >= 1.0. "
-                f"Received factor={factor}"
-            )
+            raise ValueError(f"ReduceLROnPlateau does not support a factor >= 1.0. Received factor={factor}")
 
         self.total_currs = total_currs
+        self.thres = thres
+        self.thres_counter = thres
         self.factor = factor
         self.min_lr = min_lr
+        self.max_lr = max_lr
         self.min_delta = min_delta
         self.patience = patience
         self.verbose = verbose
@@ -46,22 +46,22 @@ class UpdateRLCurriculumOnPlateau(tf.keras.callbacks.Callback):
     def _reset(self):
         """Resets wait counter and cooldown counter."""
         if self.mode not in {"auto", "min", "max"}:
-            print(
-                f"Learning rate reduction mode {self.mode} is unknown, "
-                "fallback to auto mode.",
-                stacklevel=2,
-            )
+            print(f"Learning rate reduction mode {self.mode} is unknown, fallback to auto mode.", stacklevel=2,)
             self.mode = "auto"
+
         if self.mode == "min" or (
             self.mode == "auto" and "acc" not in self.monitor
         ):
             self.monitor_op = lambda a, b: np.less(a, b - self.min_delta)
             self.best = np.inf
+
         else:
             self.monitor_op = lambda a, b: np.greater(a, b + self.min_delta)
             self.best = -np.inf
-        self.cooldown_counter = 0
+
+        self.cooldown_counter = self.cooldown
         self.wait = 0
+        self.thres_counter = self.thres
 
     def on_train_begin(self, logs=None):
         self._reset()
@@ -70,9 +70,8 @@ class UpdateRLCurriculumOnPlateau(tf.keras.callbacks.Callback):
         global current_curr
 
         logs = logs or {}
-        logs["learning_rate"] = float(
-            np.array(self.model.optimizer.learning_rate)
-        )
+        logs["learning_rate"] = float(np.array(self.model.optimizer.learning_rate))
+        logs["threshold"] = self.thres_counter
         current = logs.get(self.monitor)
 
         if current is None:
@@ -83,40 +82,39 @@ class UpdateRLCurriculumOnPlateau(tf.keras.callbacks.Callback):
                 stacklevel=2,
             )
         else:
+            # Update LR
             if self.in_cooldown():
                 self.cooldown_counter -= 1
                 self.wait = 0
-
             if self.monitor_op(current, self.best):
                 self.best = current
                 self.wait = 0
             elif not self.in_cooldown():
                 self.wait += 1
                 if self.wait >= self.patience:
-                    if current_curr < self.total_currs:
-                        current_curr += 1
-                        print(f'\n\n--- Change to curriculum {current_curr} ---\n')
-                        old_lr = float(
-                            np.array(
-                                self.model.optimizer.learning_rate
-                            )
-                        )
-                        if old_lr > np.float32(self.min_lr):
-                            new_lr = old_lr * self.factor
-                            new_lr = max(new_lr, self.min_lr)
-                            self.model.optimizer.learning_rate = new_lr
-                            if self.verbose > 0:
-                                print(
-                                    f"\nEpoch {epoch + 1}: "
-                                    "ReduceLROnPlateau reducing "
-                                    f"learning rate to {new_lr}."
-                                )
-                            self.cooldown_counter = self.cooldown
-                            self.wait = 0
-                            self._reset()
-                    else:
-                        print('Trained on all curriculums. Stopping...')
-                        self.model.stop_training = True
+                    old_lr = float(np.array(self.model.optimizer.learning_rate))
+                    
+                    if old_lr > np.float32(self.min_lr):
+                        new_lr = old_lr * self.factor
+                        new_lr = max(new_lr, self.min_lr)
+                        self.model.optimizer.learning_rate = new_lr
+
+                        if self.verbose > 0:
+                            print(f"\nEpoch {epoch + 1}:  Reducing learning rate to {new_lr}.")
+
+                        self.cooldown_counter = self.cooldown
+                        self.wait = 0
+
+            # Update curriculum
+            if logs['val_loss'] < self.thres_counter:
+                if current_curr < self.total_currs:
+                    current_curr += 1
+                    print(f'\n\n--- Change to curriculum {current_curr} ---\n')
+                    self.model.optimizer.learning_rate = self.max_lr
+                    self._reset()
+
+            elif (epoch+1) % 50 == 0:
+                self.thres_counter += 0.01
 
     def in_cooldown(self):
         return self.cooldown_counter > 0
@@ -189,14 +187,12 @@ if __name__ == '__main__':
         run_eagerly=True # to access individual elements in loss funct 
     )
 
-    if len(dnn.config['epochs_to_change']) != stats['curriculums']:
-        raise Exception('length of epochs_to_change must be equal to the number of curriculums. Modify yaml')
-
     # Train the model
     callbacks_list = [
-        keras.callbacks.TensorBoard (log_dir="logs/"),
-        UpdateRLCurriculumOnPlateau(monitor='val_loss', factor=0.2, patience=5, verbose=dnn.config['verbose'], 
-                                    min_lr=0.001, total_currs=stats['curriculums'], cooldown=5),
+        keras.callbacks.TensorBoard(log_dir="logs/"),
+        UpdateLRCurriculumOnPlateau(monitor='val_loss', factor=0.5, patience=5, verbose=dnn.config['verbose'], 
+                                    min_lr=0.0001, max_lr=dnn.config['lr'], total_currs=stats['curriculums'], 
+                                    cooldown=5, thres=dnn.config['threshold']),
         custom_metrics.PositionError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
     ]
 
