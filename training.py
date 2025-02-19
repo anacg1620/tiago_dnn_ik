@@ -112,8 +112,11 @@ class UpdateLRCurriculumOnPlateau(tf.keras.callbacks.Callback):
                     print(f'\n\n--- Change to curriculum {current_curr} ---\n')
                     self.model.optimizer.learning_rate = self.max_lr
                     self._reset()
+                elif self.model.optimizer.learning_rate == self.min_lr:
+                    print('All curriculums and LRs tested. Stopping...')
+                    self.model.stop_training = True
 
-            elif (epoch+1) % 50 == 0:
+            elif (epoch+1) % 25 == 0:
                 self.thres_counter += 0.01
 
     def in_cooldown(self):

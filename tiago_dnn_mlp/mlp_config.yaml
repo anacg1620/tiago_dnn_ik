@@ -1,5 +1,5 @@
 simple_mlp:
-  data_dir: "pykin/test"
+  data_dir: "pykin/mil_quat_norm"
   save: True
   units: 160
   batch_size: 64
