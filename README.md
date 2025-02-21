@@ -3,7 +3,7 @@
 Different methods for learning IK with TIAGo.
 
 ## Step 1: Data generation
-To generate the data using gazebo, see instructions [here](tiago_data_generation/datagen_info.md).
+To generate the data using gazebo, see instructions [here](tiago_data_generation/gazebo_data_generation/datagen_info.md).
 
 To use pykin, build first the docker image from the `tiago_dnn_ik` folder with:
 ```bash
