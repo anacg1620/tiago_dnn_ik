@@ -31,6 +31,11 @@ if __name__ == '__main__':
 
     y_cols = ['arm_1', 'arm_2', 'arm_3', 'arm_4', 'arm_5', 'arm_6', 'arm_7']
 
+    # Remove duplicates
+    print(f'Dropping {df.duplicated(x_cols).sum()} duplicates')
+    df = df.drop_duplicates(x_cols, keep='first')
+
+    # Get stats
     data_stats = {'df_mean_in': df[x_cols].mean().tolist(), 
                   'df_mean_out': df[y_cols].mean().tolist(),
                   'df_std_in': df[x_cols].std().tolist(), 
