@@ -21,7 +21,7 @@ class Cnn():
         self.model = tf.keras.models.Sequential([
             tf.keras.layers.Conv1D(filters=self.config['filters1'], kernel_size=1, input_shape=(self.input_size, 1)),
             tf.keras.layers.Conv1D(filters=self.config['filters2'], kernel_size=3, activation='elu'),
-            # tf.keras.layers.MaxPooling1D(pool_size=3), # MaxPooling1D downsizes the model by 2, but the output of the previous one without orient is size 1
+            tf.keras.layers.MaxPooling1D(pool_size=3), # MaxPooling1D downsizes the model by 2, but the output of the previous one without orient is size 1
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(self.config['units1'], activation='elu'),

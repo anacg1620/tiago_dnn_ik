@@ -20,7 +20,7 @@ class SimpleRnn():
 
         self.model = tf.keras.models.Sequential([
             tf.keras.layers.SimpleRNN(self.config['units'], input_shape=(self.input_size, 1)),
-            tf.keras.layers.Dense(output_size, activation='softmax'),
+            tf.keras.layers.Dense(output_size, activation='tanh'),
         ])
 
         self.model.summary()
