@@ -11,11 +11,11 @@ from keras import layers
 
 class SevenSubnetMlp():
     def __init__(self):
-        with open('mlp_config.yaml') as f:
+        with open('tiago_dnn_mlp/mlp_config.yaml') as f:
             self.config = yaml.safe_load(f)['seven_subnet_mlp']
 
-        x_train = np.load(f"../data/{self.config['data_dir']}/x_train_curr1.npy")
-        y_train = np.load(f"../data/{self.config['data_dir']}/y_train_curr1.npy")
+        x_train = np.load(f"data/{self.config['data_dir']}/x_train_curr1.npy")
+        y_train = np.load(f"data/{self.config['data_dir']}/y_train_curr1.npy")
 
         self.input_size = x_train.shape[1]
 
@@ -73,10 +73,10 @@ class SevenSubnetMlp():
 if __name__ == '__main__':
     dnn = SevenSubnetMlp()
 
-    x_train = np.load(f"../data/{dnn.config['data_dir']}/x_train_curr1.npy")
-    y_train = np.load(f"../data/{dnn.config['data_dir']}/y_train_curr1.npy")
-    x_test = np.load(f"../data/{dnn.config['data_dir']}/x_test_curr1.npy")
-    y_test = np.load(f"../data/{dnn.config['data_dir']}/y_test_curr1.npy")
+    x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr1.npy")
+    y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr1.npy")
+    x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr1.npy")
+    y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr1.npy")
     
     x = x_train[:,[0]]
     y = x_train[:,[1]]
@@ -102,7 +102,7 @@ if __name__ == '__main__':
     q6_t = y_test[:,[5]]
     q7_t = y_test[:,[6]]
 
-    with open(f"../data/{dnn.config['data_dir']}/data_stats.yaml") as f:
+    with open(f"data/{dnn.config['data_dir']}/data_stats.yaml") as f:
         stats = yaml.safe_load(f)
 
     wandb.init(project='tiago_dnn_ik_tests', name="SevenSubnetMlp", tensorboard=True, config=dnn.config)

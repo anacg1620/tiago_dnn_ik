@@ -12,6 +12,7 @@ from tensorflow import keras
 
 import custom_metrics
 from tiago_dnn_mlp.simple_mlp_train import SimpleMlp
+from tiago_dnn_mlp.deep_mlp_train import DeepMlp
 from tiago_dnn_cnn.cnn_train import Cnn
 from tiago_dnn_rnn.simple_rnn_train import SimpleRnn
 from tiago_dnn_rnn.lstm_train import Lstm
@@ -170,6 +171,8 @@ if __name__ == '__main__':
 
     if args.name == 'SimpleMlp':
         dnn = SimpleMlp()
+    elif args.name == 'DeepMlp':
+        dnn = DeepMlp()
     elif args.name == 'SubnetMlp':
         os.system('python3 tiago_dnn_mlp/subnet_mlp_train.py')
         sys.exit()

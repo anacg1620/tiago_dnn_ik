@@ -7,6 +7,16 @@ simple_mlp:
   lr: 0.1
   epochs: 200
   verbose: 1
+deep_mlp:
+  data_dir: "pykin/test"
+  save: True
+  num_layers: [20, 40, 20]
+  units: [128, 256, 128]
+  batch_size: 64
+  threshold: 0.17
+  lr: 0.1
+  epochs: 200
+  verbose: 1
 seven_subnet_mlp:
   data_dir: "pykin/test"
   save: True
