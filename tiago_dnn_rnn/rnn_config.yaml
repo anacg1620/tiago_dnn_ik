@@ -1,17 +1,17 @@
 simple_rnn:
-  data_dir: "pykin/mil_quat_norm"
+  data_dir: "pykin/test"
   save: True
   units: 12
   batch_size: 64
-  epochs: 400
+  epochs: 200
   verbose: 1
   lr: 0.1
-  threshold: 0.17
+  threshold: 0.00
 lstm:
-  data_dir: "pykin/mil_quat_norm"
+  data_dir: "pykin/test"
   save: True
-  batch_size: 250
-  epochs: 400
+  batch_size: 64
+  epochs: 200
   verbose: 1
   lr: 0.1
-  threshold: 0.07
+  threshold: 0.00

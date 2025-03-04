@@ -1,14 +1,12 @@
 simple_mlp:
-  data_dir: "pykin/mil_quat_norm"
+  data_dir: "pykin/test"
   save: True
   units: 160
   batch_size: 64
   threshold: 0.17
   lr: 0.1
-  epochs: 400
+  epochs: 200
   verbose: 1
-  orient_factor: 0.5
-  pos_factor: 0.5
 seven_subnet_mlp:
   data_dir: "pykin/test"
   save: True
@@ -20,6 +18,7 @@ seven_subnet_mlp:
   units6: 496
   units7: 496
   batch_size: 32
-  lr: 0.01
-  epochs: 5
+  lr: 0.1
+  threshold: 0.17
+  epochs: 200
   verbose: 0

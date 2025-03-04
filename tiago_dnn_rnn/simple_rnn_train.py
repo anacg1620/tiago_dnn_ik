@@ -28,6 +28,6 @@ class SimpleRnn():
 
     def save(self):
         # Save model
-        if self.config['simple_rnn']['save']:
+        if self.config['save']:
             self.model.save('tiago_dnn_cnn/simple_rnn.keras')
             print('Trained model saved to .keras file')
