@@ -2,6 +2,7 @@
 # See https://github.com/dcagigas/Robotics/blob/main/Scorbot_ER_VII/inverse_kinematics_ANN/Scorbot_ANN_bootstrapping_96/scorbot_make_models_inverse_kinematics.py
 
 import yaml
+import wandb
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -10,11 +11,11 @@ from keras import layers
 
 class SevenSubnetMlp():
     def __init__(self):
-        with open('tiago_dnn_mlp/mlp_config.yaml') as f:
+        with open('mlp_config.yaml') as f:
             self.config = yaml.safe_load(f)['seven_subnet_mlp']
 
-        x_train = np.load(f"data/{self.config['x_train_file']}")
-        y_train = np.load(f"data/{self.config['y_train_file']}")
+        x_train = np.load(f"../data/{self.config['data_dir']}/x_train_curr1.npy")
+        y_train = np.load(f"../data/{self.config['data_dir']}/y_train_curr1.npy")
 
         self.input_size = x_train.shape[1]
 
@@ -60,10 +61,65 @@ class SevenSubnetMlp():
         self.model = keras.Model(inputs=[inputX, inputY, inputZ], outputs=[output1, output2, output3, output4, output5, output6, output7], name="ConcatMLP")
         
         self.model.summary()
-        keras.utils.plot_model(self.model, 'tiago_dnn_mlp/concat_mlp_model.png', show_shapes=True)
+        # keras.utils.plot_model(self.model, 'tiago_dnn_mlp/concat_mlp_model.png', show_shapes=True)
 
     def save(self):
         # Save model
         if self.config['save']:
             self.model.save('tiago_dnn_mlp/7subnet_mlp.keras')
             print('Trained model saved to .keras file')
+
+
+if __name__ == '__main__':
+    dnn = SevenSubnetMlp()
+
+    x_train = np.load(f"../data/{dnn.config['data_dir']}/x_train_curr1.npy")
+    y_train = np.load(f"../data/{dnn.config['data_dir']}/y_train_curr1.npy")
+    x_test = np.load(f"../data/{dnn.config['data_dir']}/x_test_curr1.npy")
+    y_test = np.load(f"../data/{dnn.config['data_dir']}/y_test_curr1.npy")
+    
+    x = x_train[:,[0]]
+    y = x_train[:,[1]]
+    z = x_train[:,[2]]
+
+    q1_ = y_train[:,[0]]
+    q2_ = y_train[:,[1]]
+    q3_ = y_train[:,[2]]
+    q4_ = y_train[:,[3]]
+    q5_ = y_train[:,[4]]
+    q6_ = y_train[:,[5]]
+    q7_ = y_train[:,[6]]
+
+    x_t = x_test[:,[0]]
+    y_t = x_test[:,[1]]
+    z_t = x_test[:,[2]]
+
+    q1_t = y_test[:,[0]]
+    q2_t = y_test[:,[1]]
+    q3_t = y_test[:,[2]]
+    q4_t = y_test[:,[3]]
+    q5_t = y_test[:,[4]]
+    q6_t = y_test[:,[5]]
+    q7_t = y_test[:,[6]]
+
+    with open(f"../data/{dnn.config['data_dir']}/data_stats.yaml") as f:
+        stats = yaml.safe_load(f)
+
+    wandb.init(project='tiago_dnn_ik_tests', name="SevenSubnetMlp", tensorboard=True, config=dnn.config)
+
+    # Specify the loss fuction, optimizer, metrics
+    dnn.model.compile(
+        loss = 'mean_squared_error',
+        optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+        metrics = ['mean_squared_error', 'accuracy'],
+        run_eagerly=True # to access individual elements in loss funct 
+    )
+
+    callbacks_list = [
+        keras.callbacks.TensorBoard(log_dir="logs/"),
+        keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, verbose=dnn.config['verbose'], 
+                                    min_lr=0.0001, max_lr=dnn.config['lr'], cooldown=5)
+    ]
+
+    history = dnn.model.fit({'Xcoor':x, 'Ycoor':y, 'Zcoor':z}, {'q1': q1_, 'q2':q2_, 'q3':q3_, 'q4':q4_, 'q5':q5_, 'q6':q6_, 'q7':q7_}, 
+                            epochs=200, validation_split=0.3, batch_size=dnn.config['batch_size'], callbacks=callbacks_list, verbose=2)

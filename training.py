@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import os
+import sys
 import yaml
 import wandb
 import argparse
@@ -168,6 +170,9 @@ if __name__ == '__main__':
 
     if args.name == 'SimpleMlp':
         dnn = SimpleMlp()
+    elif args.name == 'SubnetMlp':
+        os.system('python3 tiago_dnn_mlp/subnet_mlp_train.py')
+        sys.exit()
     elif args.name == 'Cnn':
         dnn = Cnn()
     elif args.name == 'SimpleRnn':
@@ -180,7 +185,7 @@ if __name__ == '__main__':
     with open(f"data/{dnn.config['data_dir']}/data_stats.yaml") as f:
         stats = yaml.safe_load(f)
 
-    wandb.init(project='tiago_ik', name=args.name, tensorboard=True, config=dnn.config)
+    wandb.init(project='tiago_dnn_ik_tests', name=args.name, tensorboard=True, config=dnn.config)
 
     # Specify the loss fuction, optimizer, metrics
     dnn.model.compile(
