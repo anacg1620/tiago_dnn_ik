@@ -40,20 +40,38 @@ if __name__ == '__main__':
                   'df_mean_out': df[y_cols].mean().tolist(),
                   'df_std_in': df[x_cols].std().tolist(), 
                   'df_std_out': df[y_cols].std().tolist(),
+                  'df_median_in': df[x_cols].median().tolist(), 
+                  'df_median_out': df[y_cols].median().tolist(),
                   'df_max_in': df[x_cols].max().tolist(), 
                   'df_max_out': df[y_cols].max().tolist(),
+                  'df_maxabs_in': df[x_cols].abs().max().tolist(), 
+                  'df_maxabs_out': df[y_cols].abs().max().tolist(),
                   'df_min_in': df[x_cols].min().tolist(), 
-                  'df_min_out': df[y_cols].min().tolist()}
+                  'df_min_out': df[y_cols].min().tolist(),
+                  'df_quantile25_in': df[x_cols].quantile(0.25).tolist(),
+                  'df_quantile25_out': df[y_cols].quantile(0.25).tolist(),
+                  'df_quantile75_in': df[x_cols].quantile(0.75).tolist(),
+                  'df_quantile75_out': df[y_cols].quantile(0.75).tolist()}
 
-    # Standardization
+    # Standardization (Z-scaling)
     if args.norm == '0':
         df = (df - df.mean()) / df.std()
         data_stats['norm'] = 'std'
 
-    # Normalization
+    # Normalization (min-max normalization)
     elif args.norm == '1':
         df = (df - df.min()) / (df.max() - df.min())
         data_stats['norm'] = 'norm'
+
+    # max-absolute scaling
+    elif args.norm == '2':
+        df = df / df.abs().max()
+        data_stats['norm'] = 'max-abs'
+
+    # IQR scaling
+    elif args.norm == '3':
+        df = (df - df.median()) / (df.quantile(0.75) - df.quantile(0.25))
+        data_stats['norm'] = 'iqr'
 
     # None
     else:
@@ -70,7 +88,7 @@ if __name__ == '__main__':
     bounds = np.linspace(min(df['distance']), max(df['distance']), args.curr + 1)
 
     # Equal number of samples
-    bounds = df['distance'].quantile(np.linspace(0, 1, args.curr + 1)).to_list()
+    # bounds = df['distance'].quantile(np.linspace(0, 1, args.curr + 1)).to_list()
 
     if os.path.exists(f'data/pykin/{args.name}'):
         shutil.rmtree(f'data/pykin/{args.name}')

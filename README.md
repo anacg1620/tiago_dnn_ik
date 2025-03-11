@@ -36,7 +36,7 @@ To preprocess data generated using gazebo, see instructions [here](tiago_data_ge
 
 To use pykin, run `pykin_preprocessing` from tiago_data_generation scripts in the docker container. This creates four files `x_train`, `x_test`, `y_train` and `y_test` in the corresponding data pykin folder, times the number of curriculums. This scripts needs 4 parameters, namely:
 - `--file`: chooses input csv filename
-- `--norm`: chooses normalization type: 0 for standardization, 1 for min-max normalization, other for none
+- `--norm`: chooses normalization type: 0 for standardization, 1 for min-max, 2 for max-absolute, 3 for robust, other for none
 - `--name`: chooses name for split data files
 - `--curr`: chooses number of curriculums generated for the data
 

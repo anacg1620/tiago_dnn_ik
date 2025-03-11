@@ -41,6 +41,12 @@ class PositionError(tf.keras.callbacks.Callback):
         elif 'norm' == self.stats['norm']:
             x_true = x_true * (np.array(self.stats['df_max_in'])[:3] - np.array(self.stats['df_min_in'])[:3]) + np.array(self.stats['df_min_in'])[:3]
             y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+        elif 'max-abs' == self.stats['norm']:
+            x_true = x_true * np.array(self.stats['df_maxabs_in'])[:3]
+            y_pred = y_pred * np.array(self.stats['df_maxabs_out'])
+        elif 'iqr' == self.stats['norm']:
+            x_true = x_true * (np.array(self.stats['df_quantile75_in'])[:3] - np.array(self.stats['df_quantile25_in'])[:3]) + np.array(self.stats['df_median_in'])[:3]
+            y_pred = y_pred * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
 
         x_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
 
@@ -105,6 +111,12 @@ class QuaternionError1(tf.keras.callbacks.Callback):
         elif 'norm' == self.stats['norm']:
             orient_true = orient_true * (np.array(self.stats['df_max_in'])[3:] - np.array(self.stats['df_min_in'])[3:]) + np.array(self.stats['df_min_in'])[3:]
             y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+        elif 'max-abs' == self.stats['norm']:
+            orient_true = orient_true * (np.array(self.stats['df_maxabs_in'])[3:])
+            y_pred = y_pred * (np.array(self.stats['df_maxabs_out']))
+        elif 'iqr' == self.stats['norm']:
+            orient_true = orient_true * (np.array(self.stats['df_quantile75_in'])[3:] - np.array(self.stats['df_quantile25_in'])[3:]) + np.array(self.stats['df_median_in'])[3:]
+            y_pred = y_pred * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
 
         orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
         dif1 = np.linalg.norm(orient_true - orient_pred, axis=1)
@@ -225,6 +237,12 @@ class RotMatrixError1(tf.keras.callbacks.Callback):
         elif 'norm' == self.stats['norm']:
             orient_true = orient_true * (np.array(self.stats['df_max_in'])[3:] - np.array(self.stats['df_min_in'])[3:]) + np.array(self.stats['df_min_in'])[3:]
             y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+        elif 'max-abs' == self.stats['norm']:
+            orient_true = orient_true * np.array(self.stats['df_maxabs_in'])[3:]
+            y_pred = y_pred * np.array(self.stats['df_maxabs_out'])
+        elif 'iqr' == self.stats['norm']:
+            orient_true = orient_true * (np.array(self.stats['df_quantile75_in'])[3:] - np.array(self.stats['df_quantile25_in'])[3:]) + np.array(self.stats['df_median_in'])[3:]
+            y_pred = y_pred * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
 
         orient_pred = np.array([np.matrix(robot.forward_kin(y)['tiago_link_ee'].rotation_matrix) for y in y_pred])
         orient_true = orient_true.reshape((x_true.shape[0], 3, 3))
