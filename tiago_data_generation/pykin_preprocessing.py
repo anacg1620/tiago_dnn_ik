@@ -83,16 +83,29 @@ if __name__ == '__main__':
     thetas = [0, 0, 0, 0, 0, 0, 0]
     shoulder = robot.forward_kin(thetas)['arm_1_link'].pos
 
+    if os.path.exists(f'data/pykin/{args.name}'):
+        shutil.rmtree(f'data/pykin/{args.name}')
+    os.makedirs(f'data/pykin/{args.name}')
+
+    # Validation set
+    x = df[x_cols].to_numpy()
+    y = df[y_cols].to_numpy()
+    val_size = 0.1
+    x, x_val, y, y_val = train_test_split(x, y, test_size=val_size)
+    df = pd.DataFrame(np.concatenate((x, y), axis=1), columns=x_cols + y_cols)
+
+    with open(f'data/pykin/{args.name}/x_val.npy', 'wb') as f:
+        np.save(f, x_val)
+
+    with open(f'data/pykin/{args.name}/y_val.npy', 'wb') as f:
+        np.save(f, y_val)
+
     # Equal distance 
     df['distance'] = np.sqrt(np.square(df['ee_x'] - shoulder[0]) + np.square(df['ee_y'] - shoulder[1]) + np.square(df['ee_z'] - shoulder[2]))
     bounds = np.linspace(min(df['distance']), max(df['distance']), args.curr + 1)
 
     # Equal number of samples
     # bounds = df['distance'].quantile(np.linspace(0, 1, args.curr + 1)).to_list()
-
-    if os.path.exists(f'data/pykin/{args.name}'):
-        shutil.rmtree(f'data/pykin/{args.name}')
-    os.makedirs(f'data/pykin/{args.name}')
 
     curr_sizes = []
     for i in range(args.curr):
@@ -103,7 +116,7 @@ if __name__ == '__main__':
         y = df_curr[y_cols].to_numpy()
 
         # Split and save
-        test_size = 0.3
+        test_size = 0.2
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size)
 
         with open(f'data/pykin/{args.name}/x_train_curr{i+1}.npy', 'wb') as f:

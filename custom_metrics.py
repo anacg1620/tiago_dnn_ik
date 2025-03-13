@@ -16,11 +16,48 @@ orient_pred = []
 
 ########### POSITION ###########
 
-def position_error(y_true, y_pred):
+def position_error(y_true, y_pred, stats):
+    # De-standardization or de-normalization of inputs
+    if 'std' == stats['norm']:
+        y_true = y_true * np.array(stats['df_std_out']) + np.array(stats['df_mean_out'])
+        y_pred = y_pred * np.array(stats['df_std_out']) + np.array(stats['df_mean_out'])
+    elif 'norm' == stats['norm']:
+        y_true = y_true * (np.array(stats['df_max_out']) - np.array(stats['df_min_out'])) + np.array(stats['df_min_out'])
+        y_pred = y_pred * (np.array(stats['df_max_out']) - np.array(stats['df_min_out'])) + np.array(stats['df_min_out'])
+    elif 'max-abs' == stats['norm']:
+        y_true = y_true * np.array(stats['df_maxabs_out'])
+        y_pred = y_pred * np.array(stats['df_maxabs_out'])
+    elif 'iqr' == stats['norm']:
+        y_true = y_true * (np.array(stats['df_quantile75_out']) - np.array(stats['df_quantile25_out'])) + np.array(stats['df_median_out'])
+        y_pred = y_pred * (np.array(stats['df_quantile75_out']) - np.array(stats['df_quantile25_out'])) + np.array(stats['df_median_out'])
+
     fk_true = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_true])
     fk_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
 
     return np.linalg.norm(fk_true - fk_pred, axis=1)
+
+
+def orientation_error(y_true, y_pred, stats):   
+    # De-standardization or de-normalization of inputs
+    if 'std' == stats['norm']:
+        y_true = y_true * np.array(stats['df_std_out']) + np.array(stats['df_mean_out'])
+        y_pred = y_pred * np.array(stats['df_std_out']) + np.array(stats['df_mean_out'])
+    elif 'norm' == stats['norm']:
+        y_true = y_true * (np.array(stats['df_max_out']) - np.array(stats['df_min_out'])) + np.array(stats['df_min_out'])
+        y_pred = y_pred * (np.array(stats['df_max_out']) - np.array(stats['df_min_out'])) + np.array(stats['df_min_out'])
+    elif 'max-abs' == stats['norm']:
+        y_true = y_true * np.array(stats['df_maxabs_out'])
+        y_pred = y_pred * np.array(stats['df_maxabs_out'])
+    elif 'iqr' == stats['norm']:
+        y_true = y_true * (np.array(stats['df_quantile75_out']) - np.array(stats['df_quantile25_out'])) + np.array(stats['df_median_out'])
+        y_pred = y_pred * (np.array(stats['df_quantile75_out']) - np.array(stats['df_quantile25_out'])) + np.array(stats['df_median_out'])
+
+    fk_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
+    fk_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
+    dif1 = np.linalg.norm(fk_true - fk_pred, axis=1)
+    dif2 = np.linalg.norm(fk_true + fk_pred, axis=1)
+
+    return np.minimum(dif1, dif2)
 
 
 class PositionError(tf.keras.callbacks.Callback):

@@ -194,7 +194,7 @@ if __name__ == '__main__':
     dnn.model.compile(
         loss = 'mean_squared_error',
         optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-        metrics = ['accuracy', 'mean_squared_error'],
+        metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error, custom_metrics.orientation_error],
         run_eagerly=True # to access individual elements in loss funct 
     )
 
@@ -230,3 +230,8 @@ if __name__ == '__main__':
     )
 
     dnn.save()
+
+    # Evaluate
+    x_val = np.load(f"data/{dnn.config['data_dir']}/x_val.npy")
+    y_val = np.load(f"data/{dnn.config['data_dir']}/y_val.npy")
+    dnn.model.evaluate(x_val, y_val, batch_size=dnn.config['batch_size'], callbacks=callbacks_list)
