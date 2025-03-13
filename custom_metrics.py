@@ -59,6 +59,45 @@ class PositionError(tf.keras.callbacks.Callback):
         self.pos_error.append(score)
 
 
+class OrientationError(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data, stats):
+        self.validation_data = validation_data
+        self.stats = stats
+        self.orient_error = []
+
+    def eval_map(self):
+        x_true, y_true = next(self.validation_data)
+        y_pred = self.model.predict(x_true)
+
+        # De-standardization or de-normalization of inputs
+        # x -> pos, (orient), y -> joint angles
+        if 'std' == self.stats['norm']:
+            y_true = y_true * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+            y_pred = y_pred * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+        elif 'norm' == self.stats['norm']:
+            y_true = y_true * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+            y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+        elif 'max-abs' == self.stats['norm']:
+            y_true = y_true * np.array(self.stats['df_maxabs_out'])
+            y_pred = y_pred * np.array(self.stats['df_maxabs_out'])
+        elif 'iqr' == self.stats['norm']:
+            y_true = y_true * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
+            y_pred = y_pred * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
+
+        orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
+        orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
+        dif1 = np.linalg.norm(orient_true - orient_pred, axis=1)
+        dif2 = np.linalg.norm(orient_true + orient_pred, axis=1)
+
+        return np.mean(np.minimum(dif1, dif2))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        # print ("Position error for epoch %d is %f"%(epoch, score))
+        wandb.log({'mean-orientation-error': score})
+        self.orient_error.append(score)
+
+
 ########### QUATERNIONS ###########
 
 def quaternion_error_1(y_true, y_pred):

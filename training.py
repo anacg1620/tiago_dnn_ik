@@ -109,7 +109,7 @@ class UpdateLRCurriculumOnPlateau(tf.keras.callbacks.Callback):
                         self.wait = 0
 
             # Update curriculum
-            if logs['val_loss'] < self.thres_counter:
+            if not self.in_cooldown() and logs['val_loss'] < self.thres_counter:
                 if current_curr < self.total_currs:
                     current_curr += 1
                     print(f'\n\n--- Change to curriculum {current_curr} ---\n')
@@ -204,7 +204,8 @@ if __name__ == '__main__':
         UpdateLRCurriculumOnPlateau(monitor='val_loss', factor=0.5, patience=5, verbose=dnn.config['verbose'], 
                                     min_lr=0.0001, max_lr=dnn.config['lr'], total_currs=stats['curriculums'], 
                                     cooldown=5, thres=dnn.config['threshold']),
-        custom_metrics.PositionError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
+        custom_metrics.PositionError(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
+        custom_metrics.OrientationError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
     ]
 
     if dnn.input_size == 7:
