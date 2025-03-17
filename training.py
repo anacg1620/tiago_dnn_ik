@@ -188,13 +188,13 @@ if __name__ == '__main__':
     with open(f"data/{dnn.config['data_dir']}/data_stats.yaml") as f:
         stats = yaml.safe_load(f)
 
-    wandb.init(project='tiago_dnn_ik_tests', name=args.name, tensorboard=True, config=dnn.config)
+    wandb.init(project='tiago_dnn_ik_results', name=args.name, tensorboard=True, config=dnn.config)
 
     # Specify the loss fuction, optimizer, metrics
     dnn.model.compile(
         loss = 'mean_squared_error',
         optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-        metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error, custom_metrics.orientation_error],
+        metrics = ['accuracy', 'mean_squared_error'],
         run_eagerly=True # to access individual elements in loss funct 
     )
 
@@ -208,16 +208,16 @@ if __name__ == '__main__':
         custom_metrics.OrientationError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
     ]
 
-    if dnn.input_size == 7:
-        callbacks_list.append([custom_metrics.QuaternionError1(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
-                                custom_metrics.QuaternionError2(validation_data=val_generator(dnn.config['batch_size'])),
-                                custom_metrics.QuaternionError3(validation_data=val_generator(dnn.config['batch_size']))])
+    # if dnn.input_size == 7:
+    #     callbacks_list.append([custom_metrics.QuaternionError1(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
+    #                             custom_metrics.QuaternionError2(validation_data=val_generator(dnn.config['batch_size'])),
+    #                             custom_metrics.QuaternionError3(validation_data=val_generator(dnn.config['batch_size']))])
         
-    elif dnn.input_size == 12:
-        callbacks_list.append([custom_metrics.RotMatrixError1(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
-                                custom_metrics.RotMatrixError2(validation_data=val_generator(dnn.config['batch_size'])),
-                                custom_metrics.RotMatrixError3(validation_data=val_generator(dnn.config['batch_size'])),
-                                custom_metrics.RotMatrixError4(validation_data=val_generator(dnn.config['batch_size']))])
+    # elif dnn.input_size == 12:
+    #     callbacks_list.append([custom_metrics.RotMatrixError1(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
+    #                             custom_metrics.RotMatrixError2(validation_data=val_generator(dnn.config['batch_size'])),
+    #                             custom_metrics.RotMatrixError3(validation_data=val_generator(dnn.config['batch_size'])),
+    #                             custom_metrics.RotMatrixError4(validation_data=val_generator(dnn.config['batch_size']))])
 
     history = dnn.model.fit(
         train_generator(stats['curriculums'], dnn.config['batch_size']),
@@ -234,4 +234,10 @@ if __name__ == '__main__':
     # Evaluate
     x_val = np.load(f"data/{dnn.config['data_dir']}/x_val.npy")
     y_val = np.load(f"data/{dnn.config['data_dir']}/y_val.npy")
+    dnn.model.compile(
+        loss = 'mean_squared_error',
+        optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+        metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error(stats), custom_metrics.orientation_error(stats)],
+        run_eagerly=True # to access individual elements in loss funct 
+    )
     dnn.model.evaluate(x_val, y_val, batch_size=dnn.config['batch_size'], callbacks=callbacks_list)
