@@ -149,8 +149,8 @@ def val_generator(batch_size):
     global current_curr
 
     while True:
-        x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr{current_curr}.npy")
-        y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr{current_curr}.npy")
+        x_test = np.load(f"data/{dnn.config['data_dir']}/x_test.npy")
+        y_test = np.load(f"data/{dnn.config['data_dir']}/y_test.npy")
 
         batch_x = np.zeros((batch_size, x_test.shape[1]))
         batch_y = np.zeros((batch_size, y_test.shape[1]))

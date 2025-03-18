@@ -75,8 +75,8 @@ if __name__ == '__main__':
 
     x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr1.npy")
     y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr1.npy")
-    x_test = np.load(f"data/{dnn.config['data_dir']}/x_test_curr1.npy")
-    y_test = np.load(f"data/{dnn.config['data_dir']}/y_test_curr1.npy")
+    x_test = np.load(f"data/{dnn.config['data_dir']}/x_test.npy")
+    y_test = np.load(f"data/{dnn.config['data_dir']}/y_test.npy")
     
     x = x_train[:,[0]]
     y = x_train[:,[1]]

@@ -44,7 +44,7 @@ For example, running
 ```bash
 python3 tiago_data_generation/pykin_preprocessing.py --file='file' --norm=1 --name='name' --curr=1
 ```
-will read "data/pykin/file.csv" and produce files named "x_train_curr1.npy", "x_test_curr1.npy", etc, in the "name" folder, which will contain normalized pose or position inputs (depending on what the csv contains) and normalized joint outputs. It will also create a "data_stats.yaml" file which contains min, max, std and mean for every column of data, among other information.
+will read "data/pykin/file.csv" and produce files named "x_train_curr1.npy", "x_test.npy", etc, in the "name" folder, which will contain normalized pose or position inputs (depending on what the csv contains) and normalized joint outputs. It will also create a "data_stats.yaml" file which contains min, max, std and mean for every column of data, among other information.
 
 ## Step 3: Model building and training
 To build and train the DNN models, tensorflow is needed, so build and run the docker container. 

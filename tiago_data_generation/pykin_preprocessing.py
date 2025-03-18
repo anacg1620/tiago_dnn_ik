@@ -87,11 +87,13 @@ if __name__ == '__main__':
         shutil.rmtree(f'data/pykin/{args.name}')
     os.makedirs(f'data/pykin/{args.name}')
 
-    # Validation set
+    # Validation and test set
     x = df[x_cols].to_numpy()
     y = df[y_cols].to_numpy()
     val_size = 0.1
+    test_size = 0.2
     x, x_val, y, y_val = train_test_split(x, y, test_size=val_size)
+    x, x_test, y, y_test = train_test_split(x, y, test_size=test_size)
     df = pd.DataFrame(np.concatenate((x, y), axis=1), columns=x_cols + y_cols)
 
     with open(f'data/pykin/{args.name}/x_val.npy', 'wb') as f:
@@ -99,6 +101,13 @@ if __name__ == '__main__':
 
     with open(f'data/pykin/{args.name}/y_val.npy', 'wb') as f:
         np.save(f, y_val)
+
+    with open(f'data/pykin/{args.name}/x_test.npy', 'wb') as f:
+        np.save(f, x_test)
+
+    with open(f'data/pykin/{args.name}/y_test.npy', 'wb') as f:
+        np.save(f, y_test)
+
 
     # Equal distance 
     df['distance'] = np.sqrt(np.square(df['ee_x'] - shoulder[0]) + np.square(df['ee_y'] - shoulder[1]) + np.square(df['ee_z'] - shoulder[2]))
@@ -112,24 +121,15 @@ if __name__ == '__main__':
         df_curr = df[df['distance'].between(bounds[0], bounds[i+1])]
         curr_sizes.append(df_curr.shape[0])
 
-        x = df_curr[x_cols].to_numpy()
-        y = df_curr[y_cols].to_numpy()
+        x_train = df_curr[x_cols].to_numpy()
+        y_train = df_curr[y_cols].to_numpy()
 
-        # Split and save
-        test_size = 0.2
-        x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=test_size)
-
+        # Save
         with open(f'data/pykin/{args.name}/x_train_curr{i+1}.npy', 'wb') as f:
             np.save(f, x_train)
 
         with open(f'data/pykin/{args.name}/y_train_curr{i+1}.npy', 'wb') as f:
             np.save(f, y_train)
-
-        with open(f'data/pykin/{args.name}/x_test_curr{i+1}.npy', 'wb') as f:
-            np.save(f, x_test)
-
-        with open(f'data/pykin/{args.name}/y_test_curr{i+1}.npy', 'wb') as f:
-            np.save(f, y_test)
 
     with open(f'data/pykin/{args.name}/data_stats.yaml', 'w') as f:
         data_stats['test_size'] = test_size
