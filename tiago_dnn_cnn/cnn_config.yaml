@@ -1,8 +1,7 @@
 data_dir: "pykin/test"
 save: True
-batch_size: 64
+batch_size: 128
 epochs: 200
-threshold: 0.17
 verbose: 1
 lr: 0.1
 filters1: 1000

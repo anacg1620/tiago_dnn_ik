@@ -2,16 +2,14 @@ simple_rnn:
   data_dir: "pykin/test"
   save: True
   units: 12
-  batch_size: 64
+  batch_size: 128
   epochs: 200
   verbose: 1
   lr: 0.1
-  threshold: 0.00
 lstm:
   data_dir: "pykin/test"
   save: True
-  batch_size: 64
+  batch_size: 128
   epochs: 200
   verbose: 1
   lr: 0.1
-  threshold: 0.00
