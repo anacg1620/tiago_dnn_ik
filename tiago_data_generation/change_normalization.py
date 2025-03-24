@@ -49,23 +49,23 @@ if __name__ == '__main__':
 
                 # new normalization
                 if 'x_' in file:
-                    if args.norm == 0:
+                    if args.norm == '0':
                         df = (df - stats['df_mean_in']) / stats['df_std_in']
-                    elif args.norm == 1:
+                    elif args.norm == '1':
                         df = (df - stats['df_min_in']) / (np.array(stats['df_max_in']) - np.array(stats['df_min_in']))
-                    elif args.norm == 2:
+                    elif args.norm == '2':
                         df = df / stats['df_maxabs_in']
-                    elif args.norm == 3:
+                    elif args.norm == '3':
                         df = (df -  stats['df_median_in']) / (np.array(stats['df_quantile75_in']) - np.array(stats['df_quantile25_in']))
                 
                 elif 'y_' in file:
-                    if args.norm == 0:
+                    if args.norm == '0':
                         df = (df - stats['df_mean_out']) / stats['df_std_out']
-                    elif args.norm == 1:
+                    elif args.norm == '1':
                         df = (df - stats['df_min_out']) / (np.array(stats['df_max_out']) - np.array(stats['df_min_out']))
-                    elif args.norm == 2:
+                    elif args.norm == '2':
                         df = df / stats['df_maxabs_out']
-                    elif args.norm == 3:
+                    elif args.norm == '3':
                         df = (df -  stats['df_median_out']) / (np.array(stats['df_quantile75_out']) - np.array(stats['df_quantile25_out']))
 
                 # save npy
