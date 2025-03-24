@@ -232,4 +232,11 @@ if __name__ == '__main__':
         metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error(stats), custom_metrics.orientation_error(stats)],
         run_eagerly=True # to access individual elements in loss funct 
     )
-    dnn.model.evaluate(x_val, y_val, batch_size=dnn.config['batch_size'], callbacks=callbacks_list)
+
+    eval = dnn.model.evaluate(x_val, y_val, batch_size=dnn.config['batch_size'], callbacks=callbacks_list)
+    wandb.log({'evaluation': {
+                'mse': eval['mean_squared_error', 
+                'accuracy': eval['accuracy'], 
+                'pos_error': eval['pos_error'], 
+                'orient_error': eval['orient_error']]
+                }})
