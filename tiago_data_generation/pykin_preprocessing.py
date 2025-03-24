@@ -14,7 +14,8 @@ from pykin.kinematics.transform import Transform
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", help="choose input csv filename", type=str)
-    parser.add_argument("--norm", help="choose normalization type: 0 for standardization, 1 for min-max normalization, other for none")
+    parser.add_argument("--norm", help="choose normalization type: 0 for standardization, 1 for min-max normalization, "
+                                        "2 for max-absolute, 3 por robusy scaling, other for none")
     parser.add_argument("--name", help="choose name for split data files")
     parser.add_argument("--curr", help="choose number of curriculums generated for the data", type=int)
     args = parser.parse_args()
