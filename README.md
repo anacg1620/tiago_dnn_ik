@@ -46,6 +46,12 @@ python3 tiago_data_generation/pykin_preprocessing.py --file='file' --norm=1 --na
 ```
 will read "data/pykin/file.csv" and produce files named "x_train_curr1.npy", "x_test.npy", etc, in the "name" folder, which will contain normalized pose or position inputs (depending on what the csv contains) and normalized joint outputs. It will also create a "data_stats.yaml" file which contains min, max, std and mean for every column of data, among other information.
 
+To change the normalization type of an already split dataset and keep the train-test-validation separation, run
+```bash
+python3 tiago_data_generation/change_normalization.py --file='file' --norm=1
+```
+where file is the one passed as 'name' to preprocessing and norm is the one to change to, following the same order as before.
+
 ## Step 3: Model building and training
 To build and train the DNN models, tensorflow is needed, so build and run the docker container. 
 

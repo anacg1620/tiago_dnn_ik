@@ -235,8 +235,8 @@ if __name__ == '__main__':
 
     eval = dnn.model.evaluate(x_val, y_val, batch_size=dnn.config['batch_size'], callbacks=callbacks_list)
     wandb.log({'evaluation': {
-                'mse': eval['mean_squared_error', 
-                'accuracy': eval['accuracy'], 
-                'pos_error': eval['pos_error'], 
-                'orient_error': eval['orient_error']]
+                'mse': eval[0], 
+                'accuracy': eval[1], 
+                'pos_error': eval[3], 
+                'orient_error': eval[4]
                 }})
