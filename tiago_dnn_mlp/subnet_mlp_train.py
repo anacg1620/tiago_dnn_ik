@@ -3,6 +3,7 @@
 
 import yaml
 import wandb
+import random
 import numpy as np
 import tensorflow as tf
 from tensorflow import keras
@@ -164,6 +165,147 @@ def orientation_error(stats):
     return orient_error
 
 
+class PositionError(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data, stats):
+        self.validation_data = validation_data
+        self.stats = stats
+        self.pos_error = []
+
+    def eval_map(self):
+        x_true, y_true = next(self.validation_data)
+        y_pred = self.model.predict(x_true)[7]
+        y_true = y_true['combined_output']
+        x_true = np.array([x_true['Xcoor'], x_true['Ycoor'], x_true['Zcoor']])
+
+        # De-standardization or de-normalization of inputs
+        if 'std' == self.stats['norm']:
+            x_true = x_true * np.array(self.stats['df_std_in'])[:3] + np.array(self.stats['df_mean_in'])[:3]
+            y_pred = y_pred * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+        elif 'norm' == self.stats['norm']:
+            x_true = x_true * (np.array(self.stats['df_max_in'])[:3] - np.array(self.stats['df_min_in'])[:3]) + np.array(self.stats['df_min_in'])[:3]
+            y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+        elif 'max-abs' == self.stats['norm']:
+            x_true = x_true * np.array(self.stats['df_maxabs_in'])[:3]
+            y_pred = y_pred * np.array(self.stats['df_maxabs_out'])
+        elif 'iqr' == self.stats['norm']:
+            x_true = x_true * (np.array(self.stats['df_quantile75_in'])[:3] - np.array(self.stats['df_quantile25_in'])[:3]) + np.array(self.stats['df_median_in'])[:3]
+            y_pred = y_pred * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
+
+        x_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].pos for y in y_pred])
+
+        return np.mean(np.linalg.norm(x_true - x_pred, axis=1))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        # print ("Position error for epoch %d is %f"%(epoch, score))
+        wandb.log({'mean-position-error': score})
+        self.pos_error.append(score)
+
+
+class OrientationError(tf.keras.callbacks.Callback):
+    def __init__(self, validation_data, stats):
+        self.validation_data = validation_data
+        self.stats = stats
+        self.orient_error = []
+
+    def eval_map(self):
+        x_true, y_true = next(self.validation_data)
+        y_pred = self.model.predict(x_true)[7]
+        y_true = y_true['combined_output']
+
+        # De-standardization or de-normalization of inputs
+        # x -> pos, (orient), y -> joint angles
+        if 'std' == self.stats['norm']:
+            y_true = y_true * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+            y_pred = y_pred * np.array(self.stats['df_std_out']) + np.array(self.stats['df_mean_out'])
+        elif 'norm' == self.stats['norm']:
+            y_true = y_true * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+            y_pred = y_pred * (np.array(self.stats['df_max_out']) - np.array(self.stats['df_min_out'])) + np.array(self.stats['df_min_out'])
+        elif 'max-abs' == self.stats['norm']:
+            y_true = y_true * np.array(self.stats['df_maxabs_out'])
+            y_pred = y_pred * np.array(self.stats['df_maxabs_out'])
+        elif 'iqr' == self.stats['norm']:
+            y_true = y_true * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
+            y_pred = y_pred * (np.array(self.stats['df_quantile75_out']) - np.array(self.stats['df_quantile25_out'])) + np.array(self.stats['df_median_out'])
+
+        orient_pred = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_pred])
+        orient_true = np.array([robot.forward_kin(y)['tiago_link_ee'].rot for y in y_true])
+        dif1 = np.linalg.norm(orient_true - orient_pred, axis=1)
+        dif2 = np.linalg.norm(orient_true + orient_pred, axis=1)
+
+        return np.mean(np.minimum(dif1, dif2))
+
+    def on_epoch_end(self, epoch, logs={}):
+        score = self.eval_map()
+        # print ("Position error for epoch %d is %f"%(epoch, score))
+        wandb.log({'mean-orientation-error': score})
+        self.orient_error.append(score)
+
+
+def train_generator(curriculums, batch_size):
+    global current_curr
+
+    while True:
+        x_train = np.load(f"data/{dnn.config['data_dir']}/x_train_curr{current_curr}.npy")
+        y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr{current_curr}.npy")
+
+        batch_x = np.zeros((batch_size, x_train.shape[1]))
+        batch_y = np.zeros((batch_size, y_train.shape[1]))
+
+        for i in range(batch_size):
+            # choose random index in features
+            index = random.randint(0, x_train.shape[0]-1)
+            batch_x[i] = x_train[index]
+            batch_y[i] = y_train[index]
+
+        x = batch_x[:,[0]]
+        y = batch_x[:,[1]]
+        z = batch_x[:,[2]]
+
+        q1_ = batch_y[:,[0]]
+        q2_ = batch_y[:,[1]]
+        q3_ = batch_y[:,[2]]
+        q4_ = batch_y[:,[3]]
+        q5_ = batch_y[:,[4]]
+        q6_ = batch_y[:,[5]]
+        q7_ = batch_y[:,[6]]
+        combined_ = batch_y
+
+        yield {'Xcoor':x, 'Ycoor':y, 'Zcoor':z}, {'q1': q1_, 'q2':q2_, 'q3':q3_, 'q4':q4_, 'q5':q5_, 'q6':q6_, 'q7':q7_, 'combined_output': combined_}
+
+
+def val_generator(batch_size):
+    global current_curr
+
+    while True:
+        x_test = np.load(f"data/{dnn.config['data_dir']}/x_test.npy")
+        y_test = np.load(f"data/{dnn.config['data_dir']}/y_test.npy")
+
+        batch_x = np.zeros((batch_size, x_test.shape[1]))
+        batch_y = np.zeros((batch_size, y_test.shape[1]))
+
+        for i in range(batch_size):
+            # choose random index in features
+            index = random.randint(0, x_test.shape[0]-1)
+            batch_x[i] = x_test[index]
+            batch_y[i] = y_test[index]
+
+        x = batch_x[:,[0]]
+        y = batch_x[:,[1]]
+        z = batch_x[:,[2]]
+
+        q1_ = batch_y[:,[0]]
+        q2_ = batch_y[:,[1]]
+        q3_ = batch_y[:,[2]]
+        q4_ = batch_y[:,[3]]
+        q5_ = batch_y[:,[4]]
+        q6_ = batch_y[:,[5]]
+        q7_ = batch_y[:,[6]]
+        combined_ = batch_y
+
+        yield {'Xcoor':x, 'Ycoor':y, 'Zcoor':z}, {'q1': q1_, 'q2':q2_, 'q3':q3_, 'q4':q4_, 'q5':q5_, 'q6':q6_, 'q7':q7_, 'combined_output': combined_}
+
+
 class SevenSubnetMlp():
     def __init__(self):
         with open('tiago_dnn_mlp/mlp_config.yaml') as f:
@@ -235,32 +377,6 @@ if __name__ == '__main__':
     y_train = np.load(f"data/{dnn.config['data_dir']}/y_train_curr1.npy")
     x_test = np.load(f"data/{dnn.config['data_dir']}/x_test.npy")
     y_test = np.load(f"data/{dnn.config['data_dir']}/y_test.npy")
-    
-    x = x_train[:,[0]]
-    y = x_train[:,[1]]
-    z = x_train[:,[2]]
-
-    q1_ = y_train[:,[0]]
-    q2_ = y_train[:,[1]]
-    q3_ = y_train[:,[2]]
-    q4_ = y_train[:,[3]]
-    q5_ = y_train[:,[4]]
-    q6_ = y_train[:,[5]]
-    q7_ = y_train[:,[6]]
-    combined_ = y_train
-
-    x_t = x_test[:,[0]]
-    y_t = x_test[:,[1]]
-    z_t = x_test[:,[2]]
-
-    q1_t = y_test[:,[0]]
-    q2_t = y_test[:,[1]]
-    q3_t = y_test[:,[2]]
-    q4_t = y_test[:,[3]]
-    q5_t = y_test[:,[4]]
-    q6_t = y_test[:,[5]]
-    q7_t = y_test[:,[6]]
-    combined_t = y_test
 
     with open(f"data/{dnn.config['data_dir']}/data_stats.yaml") as f:
         stats = yaml.safe_load(f)
@@ -271,8 +387,7 @@ if __name__ == '__main__':
     dnn.model.compile(
         loss = 'mean_squared_error',
         optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-        metrics = ['mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error',
-                    ['mean_squared_error', 'accuracy', position_error(stats), orientation_error(stats)]],
+        metrics = ['mean_squared_error'],
         run_eagerly=True # to access individual elements in loss funct 
     )
 
@@ -281,17 +396,18 @@ if __name__ == '__main__':
         UpdateLRCurriculumOnPlateau(monitor='val_loss', factor=0.5, patience=5, verbose=dnn.config['verbose'], 
                                     min_lr=0.0001, max_lr=dnn.config['lr'], total_currs=stats['curriculums'], 
                                     cooldown=5),
+        PositionError(validation_data=val_generator(dnn.config['batch_size']), stats=stats),
+        OrientationError(validation_data=val_generator(dnn.config['batch_size']), stats=stats)
     ]
-
+ 
     # Train
-    history = dnn.model.fit({'Xcoor':x, 'Ycoor':y, 'Zcoor':z}, 
-                            {'q1': q1_, 'q2':q2_, 'q3':q3_, 'q4':q4_, 'q5':q5_, 'q6':q6_, 'q7':q7_, 'combined_output': combined_}, 
-                            epochs=200, 
-                            validation_data=({'Xcoor':x_t, 'Ycoor':y_t, 'Zcoor':z_t}, 
-                                             {'q1': q1_t, 'q2':q2_t, 'q3':q3_t, 'q4':q4_t, 'q5':q5_t, 'q6':q6_t, 'q7':q7_t, 'combined_output': combined_t}), 
-                            batch_size=dnn.config['batch_size'], 
-                            callbacks=callbacks_list, 
-                            verbose=dnn.config['verbose'])
+    history = dnn.model.fit(train_generator(stats['curriculums'], dnn.config['batch_size']), 
+                            steps_per_epoch=((stats['curriculum_sizes'][0] * (1-stats['test_size'])) // dnn.config['batch_size']),
+                            epochs=dnn.config['epochs'],
+                            verbose=dnn.config['verbose'],
+                            callbacks=callbacks_list,
+                            validation_data=val_generator(dnn.config['batch_size']),
+                            validation_steps=((stats['curriculum_sizes'][0] * stats['test_size']) // dnn.config['batch_size']))
     
     # Validation
     x_val = np.load(f"data/{dnn.config['data_dir']}/x_val.npy")
@@ -309,6 +425,14 @@ if __name__ == '__main__':
     q6_v = y_val[:,[5]]
     q7_v = y_val[:,[6]]
     combined_v = y_val
+
+    dnn.model.compile(
+        loss = 'mean_squared_error',
+        optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+        metrics = ['mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error', 'mean_squared_error',
+                    ['mean_squared_error', 'accuracy', position_error(stats), orientation_error(stats)]],
+        run_eagerly=True # to access individual elements in loss funct 
+    )
     
     eval = dnn.model.evaluate({'Xcoor':x_v, 'Ycoor':y_v, 'Zcoor':z_v}, 
                               {'q1': q1_v, 'q2':q2_v, 'q3':q3_v, 'q4':q4_v, 'q5':q5_v, 'q6':q6_v, 'q7':q7_v, 'combined_output': combined_v}, 
