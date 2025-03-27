@@ -13,6 +13,7 @@ from tensorflow import keras
 import custom_metrics
 from tiago_dnn_mlp.simple_mlp_train import SimpleMlp
 from tiago_dnn_mlp.deep_mlp_train import DeepMlp
+from tiago_dnn_mlp.subnet_mlp_train import SevenSubnetMlp
 from tiago_dnn_cnn.cnn_train import Cnn
 from tiago_dnn_rnn.simple_rnn_train import SimpleRnn
 from tiago_dnn_rnn.lstm_train import Lstm
@@ -166,8 +167,7 @@ if __name__ == '__main__':
     elif args.name == 'DeepMlp':
         dnn = DeepMlp()
     elif args.name == 'SubnetMlp':
-        os.system('python3 tiago_dnn_mlp/subnet_mlp_train.py')
-        sys.exit()
+        dnn = SevenSubnetMlp()
     elif args.name == 'Cnn':
         dnn = Cnn()
     elif args.name == 'SimpleRnn':
@@ -185,7 +185,7 @@ if __name__ == '__main__':
     # Specify the loss fuction, optimizer, metrics
     dnn.model.compile(
         loss = 'mean_squared_error',
-        optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
+        optimizer = tf.keras.optimizers.RMSprop(learning_rate=dnn.config['lr']),
         metrics = ['accuracy', 'mean_squared_error'],
         run_eagerly=True # to access individual elements in loss funct 
     )
