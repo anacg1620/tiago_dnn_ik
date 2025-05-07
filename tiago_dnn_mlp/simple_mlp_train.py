@@ -19,8 +19,8 @@ class SimpleMlp():
 
         # Specify the model's architecture
         self.model = tf.keras.models.Sequential([
-            tf.keras.layers.Flatten(input_shape=[self.input_size]),
-            tf.keras.layers.Dense(self.config['units'], activation='relu'),
+            # tf.keras.layers.Flatten(input_shape=[self.input_size]),
+            tf.keras.layers.Dense(self.config['units'], input_shape=[self.input_size], activation='relu'),
             tf.keras.layers.Dense(output_size, activation='tanh'),
         ])
 

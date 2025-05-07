@@ -17,10 +17,11 @@ class DeepMlp():
         output_size = y_train.shape[1]
 
         # Specify the model's architecture
-        self.model = tf.keras.models.Sequential([tf.keras.layers.Flatten(input_shape=[self.input_size])])
-        for i in self.config['num_layers']:
-            for j in range(i):
-                self.model.add(tf.keras.layers.Dense(self.config['units'][self.config['num_layers'].index(i)], activation='relu'))
+        self.model = tf.keras.models.Sequential()
+        for i in range(len(self.config['num_layers'])):
+            num_layers = self.config['num_layers'][i]
+            for j in range(num_layers):
+                self.model.add(tf.keras.layers.Dense(self.config['units'][i], input_shape=[self.input_size], activation='relu'))
         self.model.add(tf.keras.layers.Dense(output_size, activation='tanh'))
         self.model.build(input_shape=[self.input_size])
 
