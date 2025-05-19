@@ -81,6 +81,9 @@ if __name__ == '__main__':
         elif args.orient == 'matrix':
             csvwriter.writerow(['arm_1','arm_2','arm_3','arm_4','arm_5','arm_6','arm_7','ee_x','ee_y','ee_z',
                                'ee_rot_00','ee_rot_01','ee_rot_02','ee_rot_10','ee_rot_11','ee_rot_12','ee_rot_20','ee_rot_21','ee_rot_22'])
+        elif args.orient == '6d':
+            csvwriter.writerow(['arm_1','arm_2','arm_3','arm_4','arm_5','arm_6','arm_7','ee_x','ee_y','ee_z',
+                               'ee_rot_00','ee_rot_01','ee_rot_02','ee_rot_10','ee_rot_11','ee_rot_12'])
         else:
             csvwriter.writerow(['arm_1','arm_2','arm_3','arm_4','arm_5','arm_6','arm_7','ee_x','ee_y','ee_z'])
 
@@ -99,8 +102,8 @@ if __name__ == '__main__':
                     csvwriter.writerow(pos + fk.pos.tolist() + fk.rot.tolist())
                 elif args.orient == 'matrix':
                     csvwriter.writerow(pos + fk.pos.tolist() + fk.rotation_matrix.flatten().tolist())
-                else:
-                    csvwriter.writerow(pos + fk.pos.tolist())
+                elif args.orient == '6d':
+                    csvwriter.writerow(pos + fk.pos.tolist() + fk.rotation_matrix.flatten().tolist()[:-3])
 
                 i += 1
                 pbar.update(1)
