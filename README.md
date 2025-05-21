@@ -6,10 +6,6 @@ Different methods for learning IK with TIAGo and how to deploy them.
 
 This directory contains the necessary code to generate and preprocess training, validation and test datasets, build the models and train them.
 
-## [tiago_dnn_controller](tiago_dnn_controller/README.md)
-
-This directory contains the necessary code to create a ROS controller that receives a Cartesian target, waits for the inference results, and moves the joints to the resulting positions.
-
 ## [tiago_dnn_inference](tiago_dnn_inference/README.md)
 
 This directory contains the necessary code to load a pre-trained model, receive a Cartesian target, perform the IK inference and send back the results to the controller.
