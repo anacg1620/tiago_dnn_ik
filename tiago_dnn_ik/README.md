@@ -18,13 +18,14 @@ Urdf and meshes for TIAGo must be in `data/urdf` folder before building the cont
 
 To generate the data, run `pykin_generation.py` from tiago_data_generation scripts. This creates a csv file with the information needed for training.
 This scripts needs 3 parameters, namely:
+- `--rob`: chooses the robot urdf (tiago or dual)
 - `--num`: chooses number of samples to generate
 - `--file`: chooses resulting csv filename
 - `--orient`: chooses orientation (quaternion, matrix or none)
 
 For example, running
 ```bash
-python3 tiago_data_generation/pykin_generation.py --num=100 --file='name' --orient='quaternion'
+python3 tiago_data_generation/pykin_generation.py --rob='tiago' --num=100 --file='name' --orient='quaternion'
 ```
 will produce a file named "name.csv" in the `data/pykin` folder that contains 100 samples of the form (joint position, ee position, ee quaternion)
 

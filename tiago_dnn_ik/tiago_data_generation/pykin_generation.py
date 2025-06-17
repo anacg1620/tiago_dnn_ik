@@ -56,12 +56,16 @@ def show_stats(file, orient):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("--rob", help="choose robot: tiago or dual", type=str)
     parser.add_argument("--num", help="choose number of samples to generate", type=int)
     parser.add_argument("--file", help="choose resulting csv filename", type=str)
     parser.add_argument("--orient", help="choose orientation (quaternion, matrix or none)")
     args = parser.parse_args()
 
-    file_path = 'urdf/tiago/tiago.urdf'
+    if args.rob == 'tiago':
+        file_path = 'urdf/tiago/tiago.urdf'
+    elif args.rob == 'dual':
+        file_path = 'urdf/tiago/tiago_dual.urdf'
     robot = SingleArm(file_path, Transform(rot=[0.0, 0.0, 0.0], pos=[0, 0, 0]))
     joint_names = robot.get_all_active_joint_names()
     # show_info(robot)
@@ -94,8 +98,12 @@ if __name__ == '__main__':
                 pos.append(random.uniform(limits[joint]['lower'], limits[joint]['upper']))
 
             fk = robot.forward_kin(pos)
-            shoulder_pos = fk['arm_1_link']
-            fk = fk['tiago_link_ee']
+            if args.rob == 'tiago':
+                shoulder_pos = fk['arm_1_link']
+                fk = fk['tiago_link_ee']
+            elif args.rob == 'dual':
+                shoulder_pos = fk['arm_right_1_link']
+                fk = fk['arm_right_7_link']
 
             if fk.pos[2] > 0.3 and np.linalg.norm(shoulder_pos.pos - fk.pos) < 0.8:
                 if args.orient == 'quaternion':

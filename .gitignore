@@ -50,3 +50,4 @@
 **/__pycache__
 **/test
 tiago_dnn_inference/data
+**.csv
