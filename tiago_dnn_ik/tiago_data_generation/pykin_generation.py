@@ -112,7 +112,9 @@ if __name__ == '__main__':
                     csvwriter.writerow(pos + fk.pos.tolist() + fk.rotation_matrix.flatten().tolist())
                 elif args.orient == '6d':
                     csvwriter.writerow(pos + fk.pos.tolist() + fk.rotation_matrix.flatten().tolist()[:-3])
-
+                else:
+                    csvwriter.writerow(pos + fk.pos.tolist())
+                
                 i += 1
                 pbar.update(1)
 

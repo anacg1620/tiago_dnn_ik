@@ -49,5 +49,5 @@
 **/*_tuning
 **/__pycache__
 **/test
-tiago_dnn_inference/data
+**/data
 **.csv

@@ -183,10 +183,15 @@ if __name__ == '__main__':
     wandb.init(project='tiago_dnn_ik_results', name=args.name, tensorboard=True, config=dnn.config)
 
     # Specify the loss fuction, optimizer, metrics
+    if args.name == 'SubnetMlp':
+        optim = tf.keras.optimizers.RMSprop(learning_rate=dnn.config['lr'])
+    else:
+        optim = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr'])
+
     dnn.model.compile(
         loss = 'mean_squared_error',
-        optimizer = tf.keras.optimizers.RMSprop(learning_rate=dnn.config['lr']),
-        metrics = ['accuracy', 'mean_squared_error'],
+        optimizer = optim,
+        metrics = ['mean_squared_error'],
         run_eagerly=True # to access individual elements in loss funct 
     )
 
@@ -228,15 +233,14 @@ if __name__ == '__main__':
     y_val = np.load(f"data/{dnn.config['data_dir']}/y_val.npy")
     dnn.model.compile(
         loss = 'mean_squared_error',
-        optimizer = tf.keras.optimizers.Adam(learning_rate=dnn.config['lr']),
-        metrics = ['accuracy', 'mean_squared_error', custom_metrics.position_error(stats), custom_metrics.orientation_error(stats)],
+        optimizer = optim,
+        metrics = ['mean_squared_error', custom_metrics.position_error(stats), custom_metrics.orientation_error(stats)],
         run_eagerly=True # to access individual elements in loss funct 
     )
 
     eval = dnn.model.evaluate(x_val, y_val, batch_size=dnn.config['batch_size'], callbacks=callbacks_list)
     wandb.log({'evaluation': {
                 'mse': eval[0], 
-                'accuracy': eval[1], 
-                'pos_error': eval[3], 
-                'orient_error': eval[4]
+                'pos_error': eval[2], 
+                'orient_error': eval[3]
                 }})
