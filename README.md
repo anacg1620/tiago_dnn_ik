@@ -26,3 +26,21 @@ orientation:
   w: 0.0"
 ```
 The inference package will compute the joint space positions and send them to the controller, which will move the arm.
+
+## Citation
+If you found this project useful, please consider citing the following works:
+
+Calzada-Garcia, A., Victores, J. G., Naranjo-Campos, F. J., & Balaguer, C. (2025). Inverse Kinematics for Robotic Manipulators via Deep Neural Networks: Experiments and Results. Applied Sciences, 15(13), 7226. 
+
+```bibtex
+@article{calzada-garcia2025ik,
+  author = {Calzada-Garcia, Ana and Victores, Juan G. and Naranjo-Campos, Francisco J. and Balaguer, Carlos},
+  title = {Inverse Kinematics for Robotic Manipulators via Deep Neural Networks: Experiments and Results},
+  journal = {Applied Sciences},
+  volume = {15},
+  year = {2025},
+  number = {13},
+  article-number = {7226},
+  doi = {10.3390/app15137226}
+}
+```
