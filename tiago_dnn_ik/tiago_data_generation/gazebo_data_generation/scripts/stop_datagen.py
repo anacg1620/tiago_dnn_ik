@@ -3,6 +3,10 @@
 import rospy
 from controller_manager_msgs.srv import ListControllers, SwitchController
 
+
+dual = True
+
+
 if __name__ == "__main__":
   rospy.init_node("stop_datagen")
 
@@ -14,7 +18,11 @@ if __name__ == "__main__":
 
   controllers = manager_list()
 
-  start_controllers = ['arm_controller']
+  if dual:
+    start_controllers = ['arm_right_controller']
+  else:
+    start_controllers = ['arm_controller']
+
   stop_controllers = [c.name for c in controllers.controller if c.name.startswith("datagen_controller") and c.state == "running"]
 
   rospy.loginfo("Switching controllers...")

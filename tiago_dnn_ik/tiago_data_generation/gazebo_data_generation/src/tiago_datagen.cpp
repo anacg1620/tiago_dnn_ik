@@ -33,6 +33,13 @@ bool DatagenController::init(hardware_interface::PositionJointInterface* hw, ros
         return false;
     }
 
+    // TIAGo or TIAGo++
+    if (!n.getParam("dual", dual))
+    {
+        ROS_ERROR("Could not find dual parameter");
+        return false;
+    }
+
     std::string start_link, end_link;
 
     if (!n.getParam("start_link", start_link))
@@ -41,10 +48,21 @@ bool DatagenController::init(hardware_interface::PositionJointInterface* hw, ros
         return false;
     }
 
-    if (!n.getParam("end_link", end_link))
+    if (dual)
     {
-        ROS_ERROR("Could not find end_link parameter");
-        return false;
+        if (!n.getParam("dual_end_link", end_link))
+        {
+            ROS_ERROR("Could not find dual_end_link parameter");
+            return false;
+        }
+    }
+    else 
+    {
+        if (!n.getParam("end_link", end_link))
+        {
+            ROS_ERROR("Could not find end_link parameter");
+            return false;
+        }
     }
 
     if (!tree.getChain(start_link, end_link, chain))
@@ -70,10 +88,21 @@ bool DatagenController::init(hardware_interface::PositionJointInterface* hw, ros
 
     std::vector<std::string> arm_joint_names;
 
-    if (!n.getParam("arm_joint_names", arm_joint_names))
+    if (dual)
     {
-        ROS_ERROR("Could not retrieve arm joint names");
-        return false;
+        if (!n.getParam("dual_joint_names", arm_joint_names))
+        {
+            ROS_ERROR("Could not retrieve dual arm joint names");
+            return false;
+        }
+    }
+    else
+    {
+        if (!n.getParam("arm_joint_names", arm_joint_names))
+        {
+            ROS_ERROR("Could not retrieve arm joint names");
+            return false;
+        }
     }
 
     for (const auto & joint_name : arm_joint_names)
@@ -188,6 +217,14 @@ void DatagenController::update(const ros::Time& time, const ros::Duration& perio
         if (H_root_ee.p[2] < 0.0)
         {
             ROS_WARN("Too close to the floor!");
+        }
+        if (H_root_ee.p[1] < -0.3 || H_root_ee.p[1] > 0.06)
+        {
+            ROS_WARN("Too far sideways!");
+        }
+        if (H_root_ee.p[0] < 0.4 || H_root_ee.p[0] > 0.7)
+        {
+            ROS_WARN("Too far out!");
         }
         else {
             // write data to csv

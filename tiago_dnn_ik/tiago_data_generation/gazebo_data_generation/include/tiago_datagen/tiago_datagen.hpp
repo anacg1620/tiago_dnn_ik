@@ -53,6 +53,8 @@ private:
   std::ofstream file;
 
   ros::Time begin;
+
+  bool dual;
 };
 
 } //namespace

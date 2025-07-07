@@ -4,6 +4,10 @@ import rospy
 from sensor_msgs.msg import JointState
 from controller_manager_msgs.srv import SwitchController
 
+
+dual = True
+
+
 if __name__ == "__main__":
   rospy.init_node("init_datagen")
 
@@ -13,7 +17,11 @@ if __name__ == "__main__":
   rospy.wait_for_service("/controller_manager/switch_controller")
   manager = rospy.ServiceProxy("/controller_manager/switch_controller", SwitchController)
   rospy.loginfo("Switching controllers...")
-  response = manager(start_controllers=['datagen_controller'], stop_controllers=['arm_controller'], strictness=2)
+
+  if dual:
+    response = manager(start_controllers=['datagen_controller'], stop_controllers=['arm_right_controller'], strictness=2)
+  else:
+    response = manager(start_controllers=['datagen_controller'], stop_controllers=['arm_rightcontroller'], strictness=2)
 
   if not response.ok:
     rospy.logfatal("Failed to switch controllers")
